@@ -1,0 +1,12 @@
+{
+    "splat_simulate":{
+    	"de_prob": 0.1,
+    	"de_scale_factor": 0.3,
+    	"de_loc_factor": [
+    		0.5,
+    		1,
+    		1.5
+    	],
+    	"de_dr_prob": 0.5
+    }
+}
