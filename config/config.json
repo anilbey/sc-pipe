@@ -8,5 +8,24 @@
     		1.5
     	],
     	"de_dr_prob": 0.5
-    }
+    },
+	"dim_reduction":{
+		"pca":{
+			"n_components" : 2
+		},
+		"block_zifa":{
+			"n_components" : 2,
+			"n_blocks" : 16
+		},
+		"tsne":{
+			"n_components" : 2
+		},
+		"factor_analysis":{
+			"n_components" : 2
+		},
+		"simlr":{
+			
+		}
+	}
+    
 }

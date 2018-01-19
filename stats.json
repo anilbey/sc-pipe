@@ -1,0 +1,117 @@
+{
+    "total_runtime": 67.8660397529602,
+    "rules": {
+        "factor_analysis": {
+            "mean-runtime": 2.6906628608703613,
+            "min-runtime": 2.5558645725250244,
+            "max-runtime": 2.846071243286133
+        },
+        "pca": {
+            "mean-runtime": 1.6838586330413818,
+            "min-runtime": 1.5255277156829834,
+            "max-runtime": 1.8903563022613525
+        },
+        "tsne": {
+            "mean-runtime": 66.33096917470296,
+            "min-runtime": 64.70626640319824,
+            "max-runtime": 67.79979062080383
+        },
+        "all": {
+            "mean-runtime": 0.016947507858276367,
+            "min-runtime": 0.016947507858276367,
+            "max-runtime": 0.016947507858276367
+        }
+    },
+    "files": {
+        "analysis/factor_analysis/melanomaS2_sim_loc1.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:59 2018",
+            "duration": 2.846071243286133,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/pca/melanomaS2_sim_loc1.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:58 2018",
+            "duration": 1.5255277156829834,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/tsne/melanomaS2_sim_loc1.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:53:01 2018",
+            "duration": 64.70626640319824,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/pca/melanomaS2_sim_loc1.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:58 2018",
+            "duration": 1.6356918811798096,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/factor_analysis/melanomaS2_sim_loc0.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:59 2018",
+            "duration": 2.5558645725250244,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/tsne/melanomaS2_sim_loc1.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:53:04 2018",
+            "duration": 67.79979062080383,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/tsne/melanomaS2_sim_loc0.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:53:03 2018",
+            "duration": 66.48685050010681,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/pca/melanomaS2_sim_loc0.5.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:58 2018",
+            "duration": 1.8903563022613525,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        },
+        "analysis/factor_analysis/melanomaS2_sim_loc1.csv": {
+            "start-time": "Fri Jan 19 17:51:57 2018",
+            "stop-time": "Fri Jan 19 17:51:59 2018",
+            "duration": 2.6700527667999268,
+            "priority": 0,
+            "resources": {
+                "_cores": 1,
+                "_nodes": 1
+            }
+        }
+    }
+}

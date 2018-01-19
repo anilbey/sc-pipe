@@ -7,7 +7,7 @@ def preprocess_zheng17(loom_file, out_path, threads):
     ds = loompy.connect(loom_file)
     # Scanpy filtering functions assume that: genes=variables, Transpose the matrix
     adata = sc.AnnData(ds[:,:].T, obs=ds.col_attrs, var=ds.row_attrs)
-    
+    ds.close()
     sc.pp.filter_genes(adata, min_counts=1)  # only consider genes with more than 1 count
     sc.pp.normalize_per_cell(adata)          # normalize with total UMI count per cell
     filter_result = sc.pp.filter_genes_dispersion(adata.X, flavor='cell_ranger', n_top_genes=1000, log=False)

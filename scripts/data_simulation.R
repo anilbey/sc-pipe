@@ -1,5 +1,5 @@
-library(splatter)
-library(rhdf5)
+suppressMessages(library(splatter))
+suppressMessages(library(rhdf5))
 
 splat_simulate = function(data, facLoc=1, facScale=0.3, deProb=0.1, groupProb=c(0.33,0.33,0.34))
 {
@@ -30,25 +30,24 @@ write_hdf5 = function(sg, f_name)
     h5write(row_attr_list, f_name, "row_attrs" )
 }
 
-data_simulation = function (input_file, output_file, loc_factors, threads)
+data_simulation = function (input_file, output_file, loc_factor, threads)
 {
-    i = 1
-    print('output file')
+    # loc_factor is a string since we read it from the wildcards!
+    loc_factor = as.numeric(loc_factor)
+    print('loc_factor:')
+    print(loc_factor)
+    
+    print('output file:')
     print(output_file)
     print(class(output_file))
-    for (val in loc_factors)
-    {
-        print('loc_factor:')
-        print(val)
 
-        h5f = H5Fopen(input_file)
-        data = t(h5f$matrix)
-        H5Fclose(h5f)
-        sg = splat_simulate(data = data, facLoc = val)
-        write_hdf5(sg, output_file[[i]])
-        i = i + 1
-    }
+    h5f = H5Fopen(input_file)
+    data = t(h5f$matrix)
+    H5Fclose(h5f)
+    sg = splat_simulate(data = data, facLoc = loc_factor)
+    write_hdf5(sg, output_file)
+
 }
 
-
-data_simulation(snakemake@input[[1]], snakemake@output, snakemake@params['de_loc_factor'][[1]], snakemake@threads)
+# snakemake@input is a list
+data_simulation(snakemake@input[[1]], snakemake@output[[1]], snakemake@wildcards[['loc']], snakemake@threads)
