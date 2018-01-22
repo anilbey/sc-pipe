@@ -5,11 +5,25 @@
     	"de_loc_factor": [
     		0.5,
     		1,
-    		1.5
+    		1.5,
+            2,
+            2.5,
+            3
     	],
-    	"de_dr_prob": 0.5
+    	"de_dr_prob": 0.5,
+        "group_prob": [
+            0.33,
+            0.33,
+            0.34
+        ]
     },
 	"dim_reduction":{
+        "methods_used": [
+            "pca",
+            "tsne",
+            "factor_analysis",
+            "block_zifa"
+        ],
 		"pca":{
 			"n_components" : 2
 		},

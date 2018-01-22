@@ -30,24 +30,18 @@ write_hdf5 = function(sg, f_name)
     h5write(row_attr_list, f_name, "row_attrs" )
 }
 
-data_simulation = function (input_file, output_file, loc_factor, threads)
+data_simulation = function (input_file, output_file, group_prob, loc_factor, threads)
 {
     # loc_factor is a string since we read it from the wildcards!
     loc_factor = as.numeric(loc_factor)
-    print('loc_factor:')
-    print(loc_factor)
-    
-    print('output file:')
-    print(output_file)
-    print(class(output_file))
 
     h5f = H5Fopen(input_file)
     data = t(h5f$matrix)
     H5Fclose(h5f)
-    sg = splat_simulate(data = data, facLoc = loc_factor)
+    sg = splat_simulate(data = data, groupProb = group_prob,  facLoc = loc_factor)
     write_hdf5(sg, output_file)
 
 }
 
 # snakemake@input is a list
-data_simulation(snakemake@input[[1]], snakemake@output[[1]], snakemake@wildcards[['loc']], snakemake@threads)
+data_simulation(snakemake@input[[1]], snakemake@output[[1]], snakemake@params[['group_prob']],  snakemake@wildcards[['loc']], snakemake@threads)

@@ -10,7 +10,7 @@ def apply_zifa(input_file, output_file, n_components, n_blocks, threads):
     matrix = np.log1p(matrix)
     
     Zhat, params = block_ZIFA.fitModel(matrix, n_components, n_blocks = n_blocks)
-    np.savetxt(output_file, zifa_Zhat, delimiter=",")
+    np.savetxt(output_file, Zhat, delimiter=",")
     
     
 apply_zifa(snakemake.input.__str__(), snakemake.output.__str__(), snakemake.params.n_components, snakemake.params.n_blocks, snakemake.threads)
