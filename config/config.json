@@ -15,7 +15,8 @@
             0.33,
             0.33,
             0.34
-        ]
+        ],
+        "dropout_present": true
     },
 	"dim_reduction":{
         "methods_used": [
@@ -29,7 +30,7 @@
 		},
 		"block_zifa":{
 			"n_components" : 2,
-			"n_blocks" : 16
+			"n_blocks" : 1
 		},
 		"tsne":{
 			"n_components" : 2

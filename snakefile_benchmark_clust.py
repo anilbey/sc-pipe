@@ -1,7 +1,8 @@
 configfile: 'config/config.json'
 SAMPLE = 'melanomaS2'
-HDF5_OUTPUT = 'simulated_data'
-ANALYSIS_OUTPUT = 'analysis'
+HDF5_OUTPUT = 'hdf5_data'
+SIMULATED_DATA_OUTPUT = 'simulated/dropout_present'
+ANALYSIS_OUTPUT = 'analysis/dropout_present'
 
 
 '''
@@ -17,21 +18,6 @@ rule all:
 
 # rule cellranger count (parallel)
 # rule cellranger aggr
-
-'''
-rule cluster_evaluate:
-'''
-   # Takes a simulated dataset and a list of the clustering results for that
-   # dataset
-'''
-    input:
-        sim_data = HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
-        cluster_results =
-        expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/'+SAMPLE+'_sim_loc'+'{loc}'+'clusters.csv',method=config['dim_reduction']['methods_used'])
-    output:        
-    
-    script:
-'''
 
 rule cluster_results:
     input:
@@ -67,9 +53,10 @@ rule simulate_data:
     input:
         sample_loom = HDF5_OUTPUT+'/'+SAMPLE+'_zheng17.loom'
     params:
-        group_prob = config['splat_simulate']['group_prob']
+        group_prob = config['splat_simulate']['group_prob'],
+        dropout_present = config['splat_simulate']['dropout_present']
     output:
-        HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
     script:
         "scripts/data_simulation.R"
 
@@ -78,7 +65,7 @@ rule simulate_data:
 
 rule pca:
     input:
-        HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
     params:
         n_components = config['dim_reduction']['pca']['n_components']
     output:
@@ -89,7 +76,7 @@ rule pca:
 
 rule factor_analysis:
     input:
-        HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
     params:
         n_components = config['dim_reduction']['factor_analysis']['n_components']
     output:
@@ -99,7 +86,7 @@ rule factor_analysis:
 
 rule tsne:
     input:
-        HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
     params:
         n_components = config['dim_reduction']['tsne']['n_components']
     output:
@@ -109,7 +96,7 @@ rule tsne:
 
 rule zifa:
     input:
-        HDF5_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/'+SAMPLE+'_sim_loc'+'{loc}'+'.loom'
     params:
         n_components = config['dim_reduction']['block_zifa']['n_components'],
         n_blocks = config['dim_reduction']['block_zifa']['n_blocks']

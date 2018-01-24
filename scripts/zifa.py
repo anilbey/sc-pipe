@@ -8,7 +8,9 @@ def apply_zifa(input_file, output_file, n_components, n_blocks, threads):
     matrix = h5f['matrix'][:]
     h5f.close()
     matrix = np.log1p(matrix)
-    
+   
+    print('##ZIFA: number of blocks')
+    print(n_blocks)
     Zhat, params = block_ZIFA.fitModel(matrix, n_components, n_blocks = n_blocks)
     np.savetxt(output_file, Zhat, delimiter=",")
     
