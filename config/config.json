@@ -1,30 +1,46 @@
 {
-    "splat_simulate":{
-    	"de_prob": 0.1,
-    	"de_scale_factor": 0.3,
-    	"de_loc_factor": [
-    		0.5,
-    		1,
-    		1.5,
-            2,
-            2.5,
-            3
-    	],
-    	"de_dr_prob": 0.5,
-        "group_prob": [
-            0.33,
-            0.33,
-            0.34
-        ],
-        "dropout_present": true
+	"real_datasets": ["zeisel.loom"],
+	"splat_simulate":{
+	"de_prob": 0.1,
+	"de_scale_factor": 0.3,
+	"de_loc_factor": [
+		0.5,
+		1,
+		1.5,
+		2,
+		2.5,
+		3,
+		3.5,
+		4
+	],
+	"de_dr_prob": 0.5,
+	"group_prob": [
+	    0.33,
+	    0.33,
+	    0.34
+	],
+	"dropout_present": true
+	},
+    "clustering":{
+        "phenograph":{
+            "n_neighbours" : 30
+        }
     },
 	"dim_reduction":{
-        "methods_used": [
-            "pca",
-            "tsne",
-            "factor_analysis",
-            "block_zifa"
-        ],
+		"methods_used": [
+		    "pca",
+		    "tsne",
+		    "factor_analysis",
+		    "block_zifa",
+		    "simlr",
+            "phenograph"
+		],
+		"simlr":{
+			"pca_components" : 500,
+			"n_neighbours" : 50,
+			"max_iter" : 10,
+			"n_components" : 3
+		},
 		"pca":{
 			"n_components" : 2
 		},
@@ -37,10 +53,7 @@
 		},
 		"factor_analysis":{
 			"n_components" : 2
-		},
-		"simlr":{
-			
 		}
-	}
     
+    }
 }
