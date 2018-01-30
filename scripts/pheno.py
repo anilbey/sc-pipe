@@ -4,7 +4,6 @@ import numpy as np
 
 
 def apply_pheno(input_file, output_file, n_neighbours, threads):
-    print('tayyar')
     h5f = h5py.File(input_file, 'r')
     matrix = h5f['matrix'][:]
     h5f.close()
