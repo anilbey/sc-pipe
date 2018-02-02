@@ -1,10 +1,12 @@
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']
 HDF5_OUTPUT = 'hdf5_data'
-SIMULATED_DATA_OUTPUT = 'simulated/dropout_present'
-ANALYSIS_OUTPUT = 'analysis/dropout_present'
+SIMULATED_DATA_OUTPUT = 'simulated/from_raw_counts'
+ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
+LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
+CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output_path']
 
-
+#ruleorder: simulate_data  > preprocess_zheng17
 '''
 rules
 '''
@@ -26,56 +28,74 @@ rule cluster_results:
         n_clusters = len(config['splat_simulate']['group_prob'])
     output:
         ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+    log:
+        LOG_FILES+'/k-means/sample_{sample}loc_{loc}.log'
     script:
         "scripts/k-means.py"
 
-rule create_loom:
+rule create_hdf5:
     input:
-        genes_file = 'cell_ranger_output/{sample}/outs/filtered_gene_bc_matrices/GRCh38/genes.tsv',
-        matrix_file = 'cell_ranger_output/{sample}/outs/filtered_gene_bc_matrices/GRCh38/matrix.mtx',
-        barcodes_file = 'cell_ranger_output/{sample}/outs/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
+        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/genes.tsv',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/matrix.mtx',
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
     output:
-        HDF5_OUTPUT+'/{sample}.loom'
+        HDF5_OUTPUT+'/{sample}.h5'
+    log:
+        LOG_FILES+'/create_hdf5/sample_{sample}.log'
     script:
-        "scripts/create_loom.py"
+        "scripts/create_hdf5.py"
 
 
-rule preprocess_zheng17:
-    input:
-        loom_file = HDF5_OUTPUT+'/{sample}.loom'	
-    output:
-        HDF5_OUTPUT+'/{sample}_zheng17.loom'
-    script: 
-        "scripts/preprocess_zheng17.py"
-
-# parallel
 rule simulate_data:
     input:
-        sample_loom = HDF5_OUTPUT+'/{sample}_zheng17.loom'
+        sample_hdf5 = rules.create_hdf5.output
     params:
         group_prob = config['splat_simulate']['group_prob'],
         dropout_present = config['splat_simulate']['dropout_present']
+    wildcard_constraints:
+        loc="\d(\.\d)?"
     output:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
+    log:
+        LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.log'
     script:
         "scripts/data_simulation.R"
 
 
-# run those rules for all simulated data
+rule preprocess_zheng17:
+    '''
+    regex pattern 
+        loc: 0.5, 1, 1.4, 2
+    '''
+    input:
+        hdf5_file = rules.simulate_data.output 
+    params:
+        transpose = False
+    wildcard_constraints:
+        loc="\d(\.\d)?"
+    output:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
+    log:
+        LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.log'
+    script: 
+        "scripts/preprocess_zheng17.py"
+
 
 rule pca:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_components = config['dim_reduction']['pca']['n_components']
     output:
         ANALYSIS_OUTPUT+'/pca/{sample}_sim_loc'+'{loc}'+'.csv'
+    log:
+        LOG_FILES+'/pca/sample_{sample}loc_{loc}.log'
     script:
         "scripts/pca.py"
 
 rule simlr:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_components = config['dim_reduction']['simlr']['n_components'],
         pca_components = config['dim_reduction']['simlr']['pca_components'],
@@ -83,51 +103,59 @@ rule simlr:
         max_iter = config['dim_reduction']['simlr']['max_iter']
     output:
         ANALYSIS_OUTPUT+'/simlr/{sample}_sim_loc'+'{loc}'+'.csv'
+    log:
+        LOG_FILES+'/simlr/sample_{sample}loc_{loc}.log'
     script:
         "scripts/simlr_large.py"
 
 
 rule factor_analysis:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_components = config['dim_reduction']['factor_analysis']['n_components']
     output:
         ANALYSIS_OUTPUT+'/factor_analysis/{sample}_sim_loc'+'{loc}'+'.csv'
+    log:
+        LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.log' 
     script:
         "scripts/factor_analysis.py"
 
 rule tsne:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_components = config['dim_reduction']['tsne']['n_components']
     output:
         ANALYSIS_OUTPUT+'/tsne/{sample}_sim_loc'+'{loc}'+'.csv'
+    log:
+        LOG_FILES+'/tsne/sample_{sample}loc_{loc}.log'
     script:
         "scripts/tsne.py"
 
 rule phenograph:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_neighbours = config['clustering']['phenograph']['n_neighbours']
     output:
         ANALYSIS_OUTPUT+'/phenograph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+    log:
+        LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.log'
     threads:8
     script:
         "scripts/pheno.py"
 
-
-
 rule zifa:
     input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc'+'{loc}'+'.loom'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         n_components = config['dim_reduction']['block_zifa']['n_components'],
         n_blocks = config['dim_reduction']['block_zifa']['n_blocks']
     output:
         ANALYSIS_OUTPUT+'/block_zifa/{sample}_sim_loc'+'{loc}'+'.csv'
+    log:
+        LOG_FILES+'/zifa/sample_{sample}loc_{loc}.log'
     script:
         "scripts/zifa.py"
 

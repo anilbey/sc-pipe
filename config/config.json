@@ -1,25 +1,26 @@
 {
+    "cell_ranger_output_path": "/cluster/work/bewi/members/tuncel/data/data", 
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
-	"de_prob": 0.1,
-	"de_scale_factor": 0.3,
-	"de_loc_factor": [
-		0.5,
-		1,
-		1.5,
-		2,
-		2.5,
-		3,
-		3.5,
-		4
-	],
-	"de_dr_prob": 0.5,
-	"group_prob": [
-	    0.33,
-	    0.33,
-	    0.34
-	],
-	"dropout_present": true
+        "de_prob": 0.1,
+        "de_scale_factor": 0.3,
+        "de_loc_factor": [
+            0.5,
+            1,
+            1.5,
+            2,
+            2.5,
+            3,
+            3.5,
+            4
+        ],
+        "de_dr_prob": 0.5,
+        "group_prob": [
+            0.33,
+            0.33,
+            0.34
+        ],
+        "dropout_present": true
 	},
     "clustering":{
         "phenograph":{

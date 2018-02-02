@@ -23,25 +23,28 @@ write_hdf5 = function(sg, f_name)
     gene_names = rownames(simulated_matrix)
     cell_names = colnames(simulated_matrix)
     cell_groups = sg$Group
-    col_attr_list = list(cell_names = cell_names, cell_groups = cell_groups)
-    row_attr_list = list(gene_names = gene_names)
     h5createFile(f_name)
-    h5write(col_attr_list, f_name, "col_attrs" )
-    h5createGroup(f_name,"layers")
+    h5write(gene_names, f_name, "gene_names")
     h5write(simulated_matrix, f_name,"matrix")
-    h5write(row_attr_list, f_name, "row_attrs" )
+    h5write(cell_names, f_name, "cell_names")
+    h5write(cell_groups, f_name, "cell_groups")
+    h5write(FALSE, f_name, "cells_on_rows")
 }
 
 data_simulation = function (input_file, output_file, group_prob, dropout_present,  loc_factor, threads)
 {
+    # R uses column-major order therefore the HDF5 matrix is transposed
+    # automatically. Python and hdf5 use row-major order
     print('dropout present value:')
     print(dropout_present)
     # loc_factor is a string since we read it from the wildcards!
     loc_factor = as.numeric(loc_factor)
 
     h5f = H5Fopen(input_file)
-    data = t(h5f$matrix)
+    data = h5f$matrix
     H5Fclose(h5f)
+    print('*******shape of the matrix****')
+    print(dim(data))
     sg = splat_simulate(data = data, groupProb = group_prob, dropoutPresent=dropout_present,  facLoc = loc_factor)
     write_hdf5(sg, output_file)
 
