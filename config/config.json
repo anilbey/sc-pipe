@@ -1,12 +1,16 @@
 {
-    "cell_ranger_output_path": "/cluster/work/bewi/members/tuncel/data/data", 
+    "simulated_data_output": "simulated/6_groups",
+    "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/data", 
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
         "de_prob": 0.1,
         "de_scale_factor": 0.3,
         "de_loc_factor": [
+            0.25,
             0.5,
+            0.75,
             1,
+            1.25,
             1.5,
             2,
             2.5,
@@ -16,13 +20,20 @@
         ],
         "de_dr_prob": 0.5,
         "group_prob": [
-            0.33,
-            0.33,
-            0.34
+            0.24,
+            0.12,
+            0.10,
+            0.02,
+            0.37,
+            0.15
         ],
         "dropout_present": true
 	},
     "clustering":{
+        "methods_used":[
+            "phenograph",
+            "griph"
+        ],
         "phenograph":{
             "n_neighbours" : 30
         }
@@ -33,8 +44,7 @@
 		    "tsne",
 		    "factor_analysis",
 		    "block_zifa",
-		    "simlr",
-            "phenograph"
+		    "simlr"
 		],
 		"simlr":{
 			"pca_components" : 500,

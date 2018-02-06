@@ -1,10 +1,10 @@
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']
 HDF5_OUTPUT = 'hdf5_data'
-SIMULATED_DATA_OUTPUT = 'simulated/from_raw_counts'
+SIMULATED_DATA_OUTPUT = config['simulated_data_output']
 ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
 LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
-CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output_path']
+CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 
 #ruleorder: simulate_data  > preprocess_zheng17
 '''
@@ -14,7 +14,7 @@ rules
 rule all:
     input:
         expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv',
-                loc=config['splat_simulate']['de_loc_factor'],method=config['dim_reduction']['methods_used'],sample=SAMPLE)
+                loc=config['splat_simulate']['de_loc_factor'],method=config['dim_reduction']['methods_used']+config['clustering']['methods_used'],sample=SAMPLE)
     shell:
         'echo test rule all {input}'
 
@@ -53,7 +53,7 @@ rule simulate_data:
         group_prob = config['splat_simulate']['group_prob'],
         dropout_present = config['splat_simulate']['dropout_present']
     wildcard_constraints:
-        loc="\d(\.\d)?"
+        loc="\d(\.\d+)?"
     output:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
     log:
@@ -65,14 +65,14 @@ rule simulate_data:
 rule preprocess_zheng17:
     '''
     regex pattern 
-        loc: 0.5, 1, 1.4, 2
+        loc: 0.25, 0.5, 1, 1.4, 2
     '''
     input:
         hdf5_file = rules.simulate_data.output 
     params:
         transpose = False
     wildcard_constraints:
-        loc="\d(\.\d)?"
+        loc="\d(\.\d+)?"
     output:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     log:
@@ -145,6 +145,35 @@ rule phenograph:
     threads:8
     script:
         "scripts/pheno.py"
+
+rule louvain:
+    input:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
+    params:
+        #TODO read from the config
+    output:
+        ANALYSIS_OUTPUT+'/louvain/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+    log:
+        LOG_FILES+'/louvain/sample_{sample}loc_{loc}.log'
+    threads:8
+    script:
+        "scripts/louvain.py"
+
+rule griph:
+    input:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
+    params:
+        #TODO read from the config
+    output:
+        ANALYSIS_OUTPUT+'/griph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+    log:
+        LOG_FILES+'/griph/sample_{sample}loc_{loc}.log'
+    threads:8
+    script:
+        "scripts/griph.R"
+
+
+
 
 rule zifa:
     input:
