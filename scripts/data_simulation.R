@@ -24,11 +24,23 @@ write_hdf5 = function(sg, f_name)
     cell_names = colnames(simulated_matrix)
     cell_groups = sg$Group
     h5createFile(f_name)
-    h5write(gene_names, f_name, "gene_names")
+    h5createGroup(f_name, "cell_attrs")
+    h5createGroup(f_name, "gene_attrs")
+    h5write(gene_names, f_name, "gene_attrs/gene_names")
     h5write(simulated_matrix, f_name,"matrix")
-    h5write(cell_names, f_name, "cell_names")
-    h5write(cell_groups, f_name, "cell_groups")
-    h5write(FALSE, f_name, "cells_on_rows")
+    h5write(cell_names, f_name, "cell_attrs/cell_names")
+    h5write(cell_groups, f_name, "cell_attrs/cell_groups")
+    h5write(FALSE, f_name, "cell_attrs/cells_on_rows")
+
+    X = colnames(rowData(sg))
+    for (deg in X[grepl("^DEFacGroup*", X)])
+    {
+        deg_values = rowData(sg)[deg][[1]]
+        h5write(deg_values, f_name, paste("gene_attrs/",deg ,sep = ''))
+    }
+    # closes all open HDF5 handles in the environment 
+    H5close()
+
 }
 
 data_simulation = function (input_file, output_file, group_prob, dropout_present,  loc_factor, threads)
@@ -50,5 +62,4 @@ data_simulation = function (input_file, output_file, group_prob, dropout_present
 
 }
 
-# snakemake@input is a list
 data_simulation(snakemake@input[[1]], snakemake@output[[1]], snakemake@params[['group_prob']], snakemake@params[['dropout_present']],  snakemake@wildcards[['loc']], snakemake@threads)
