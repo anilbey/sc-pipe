@@ -1,11 +1,12 @@
 {
-    "simulated_data_output": "simulated/6_groups",
+    "simulated_data_output": "simulated/test/6_groups",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/data", 
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
         "de_prob": 0.1,
         "de_scale_factor": 0.3,
-        "de_loc_factor": [
+       	"de_loc_factor": [1],
+	"_de_loc_factor": [
             0.25,
             0.5,
             0.75,
@@ -39,7 +40,8 @@
         }
     },
 	"dim_reduction":{
-		"methods_used": [
+		"methods_used": ["pca"],
+		"_methods_used": [
 		    "pca",
 		    "tsne",
 		    "factor_analysis",
