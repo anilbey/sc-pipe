@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import argparse
-=======
-import sys
->>>>>>> 4611653604b506ae97d5ee530a435960821d9add
 import numpy as np
 from scipy.io import mmread
 import h5py
@@ -17,12 +13,8 @@ parser.add_argument("--n_threads", help="the number of threads", type=int,
         default=1)
 args = parser.parse_args()
 
-<<<<<<< HEAD
 
 def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path):
-=======
-def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path, threads):
->>>>>>> 4611653604b506ae97d5ee530a435960821d9add
     # to read a matrix market file
     matrix = mmread(matrix_file.__str__()).astype("float32").todense().T
     
@@ -39,10 +31,5 @@ def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path, threads):
 
     f.close()
 
-<<<<<<< HEAD
 cellranger_to_hdf5(args.genes_file, args.matrix_file, args.barcodes_file,
         args.output_file)
-=======
-cellranger_to_hdf5(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-        sys.argv[5])
->>>>>>> 4611653604b506ae97d5ee530a435960821d9add
