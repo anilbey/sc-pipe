@@ -53,7 +53,11 @@ rule create_hdf5:
         out = LOG_FILES+'/create_hdf5/sample_{sample}.out',
         err = LOG_FILES+'/create_hdf5/sample_{sample}.err'
     shell:
+<<<<<<< HEAD
         'python scripts/create_hdf5.py {input.genes_file} {input.matrix_file} {input.barcodes_file} {output} 2> {log.err} 1> {log.out} '
+=======
+        'python scripts/create_hdf5.py {input.genes_file} {input.matrix_file} {input.barcodes_file} {output} {threads} 2> {log.err} 1> {log.out} '
+>>>>>>> 4611653604b506ae97d5ee530a435960821d9add
 
 
 rule simulate_data:
