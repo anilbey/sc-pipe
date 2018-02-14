@@ -3,6 +3,17 @@ import h5py
 import numpy as np
 import logging
 import time
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_file", help="input matrix hdf5 file")
+parser.add_argument("output_file", help="path to the output csv file")
+parser.add_argument("n_components", help="the number of principal components",
+        type=int)
+parser.add_argument("--n_threads", help="the number of threads", type=int,
+        default=1)
+args = parser.parse_args()
+
 
 def apply_pca(input_file, output_file, n_components, threads):
 
@@ -15,13 +26,4 @@ def apply_pca(input_file, output_file, n_components, threads):
     pca_Zhat = pca.fit_transform(matrix)
     np.savetxt(output_file, pca_Zhat, delimiter=",")
 
-
-# try:
-apply_pca(snakemake.input.__str__(), snakemake.output.__str__(), snakemake.params.n_components, snakemake.threads)
-'''
-    except Exception as e:
-    log_time = time.strftime("%d.%m.%Y-%H:%M:%S")
-    f_name = 'exception/pca'+log_time+'.log'
-    logging.basicConfig(filename=f_name,level=logging.INFO)
-    logging.exception(e, exc_info=True)
-'''
+apply_pca(args.input_file, args.output_file, args.n_components, args.n_threads)

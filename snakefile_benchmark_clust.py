@@ -6,6 +6,15 @@ ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
 LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
 CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 
+
+def serialize(list_var):
+#   Serializes the list into a comma separated string
+    if isinstance(list_var, list): 
+        return (','.join(map(str, list_var)))
+    else:
+        return list_var
+
+
 #ruleorder: simulate_data  > preprocess_zheng17
 '''
 rules
@@ -44,10 +53,13 @@ rule create_hdf5:
         out = LOG_FILES+'/create_hdf5/sample_{sample}.out',
         err = LOG_FILES+'/create_hdf5/sample_{sample}.err'
     shell:
-        'python scripts/create_hdf5.py {input.genes_file} {input.matrix_file} {input.barcodes_file} {output} {threads} 2> {log.err} 1> {log.out} '
+        'python scripts/create_hdf5.py {input.genes_file} {input.matrix_file} {input.barcodes_file} {output} 2> {log.err} 1> {log.out} '
 
 
 rule simulate_data:
+    '''
+    group_prob can be a list
+    '''
     input:
         sample_hdf5 = rules.create_hdf5.output
     params:
@@ -90,9 +102,10 @@ rule pca:
     output:
         ANALYSIS_OUTPUT+'/pca/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
-        LOG_FILES+'/pca/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/pca.py"
+        out = LOG_FILES+'/pca/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/pca/sample_{sample}loc_{loc}.err'
+    shell:
+        "python scripts/pca.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
 
 rule simlr:
     input:

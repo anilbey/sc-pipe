@@ -1,11 +1,20 @@
-import sys
+import argparse
 import numpy as np
 from scipy.io import mmread
 import h5py
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("genes_file", help="tsv file containing gene names")
+parser.add_argument("matrix_file", help="file containing the geneXcell matrix")
+parser.add_argument("barcodes_file", help="file containing the cell ids(barcodes)")
+parser.add_argument("output_file", help="path to the output hdf5 file")
+parser.add_argument("--n_threads", help="the number of threads", type=int,
+        default=1)
+args = parser.parse_args()
 
-def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path, threads):
+
+def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path):
     # to read a matrix market file
     matrix = mmread(matrix_file.__str__()).astype("float32").todense().T
     
@@ -22,5 +31,5 @@ def cellranger_to_hdf5 (genes, matrix_file, barcodes, out_path, threads):
 
     f.close()
 
-cellranger_to_hdf5(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4],
-        sys.argv[5])
+cellranger_to_hdf5(args.genes_file, args.matrix_file, args.barcodes_file,
+        args.output_file)
