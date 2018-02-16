@@ -1,5 +1,17 @@
 suppressMessages(library(splatter))
 suppressMessages(library(rhdf5))
+library(argparse)
+
+parser <- ArgumentParser(description= 'simulates data')
+parser$add_argument('--input', required=TRUE)
+parser$add_argument('--group_prob', type='double', nargs='*', required=TRUE)
+parser$add_argument('--dropout_present', type='logical', required=TRUE)
+parser$add_argument('--output', required=TRUE)
+parser$add_argument('--loc', required=TRUE, type='double')
+args = parser$parse_args()
+
+print('dropout present value:')
+print(args$dropout_present)
 
 splat_simulate = function(data, facLoc=1, facScale=0.3, deProb=0.1, dropoutPresent=FALSE, groupProb=c(0.33,0.33,0.34))
 {
@@ -43,12 +55,11 @@ write_hdf5 = function(sg, f_name)
 
 }
 
-data_simulation = function (input_file, output_file, group_prob, dropout_present,  loc_factor, threads)
+data_simulation = function (input_file, output_file, group_prob, dropout_present,  loc_factor)
 {
     # R uses column-major order therefore the HDF5 matrix is transposed
     # automatically. Python and hdf5 use row-major order
-    print('dropout present value:')
-    print(dropout_present)
+
     # loc_factor is a string since we read it from the wildcards!
     loc_factor = as.numeric(loc_factor)
 
@@ -62,4 +73,4 @@ data_simulation = function (input_file, output_file, group_prob, dropout_present
 
 }
 
-data_simulation(snakemake@input[[1]], snakemake@output[[1]], snakemake@params[['group_prob']], snakemake@params[['dropout_present']],  snakemake@wildcards[['loc']], snakemake@threads)
+data_simulation(args$input, args$output, args$group_prob, args$dropout_present,  args$loc)

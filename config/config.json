@@ -1,6 +1,10 @@
 {
-    "simulated_data_output": "simulated/test/6_groups",
-    "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/data", 
+    "simulated_data_output": "simulated/hgmm100/6_groups",
+    "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs/hgmm_100_fastqs",
+    "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_output",
+    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-hg19_and_mm10-1.2.0",
+    "transcriptome_code": "hg19",
+    "unique_run_id": "hgmm_100",
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
         "de_prob": 0.1,
@@ -32,16 +36,15 @@
 	},
     "clustering":{
         "methods_used":[
-            "phenograph",
-            "griph"
+            "phenograph"
         ],
         "phenograph":{
             "n_neighbours" : 30
         }
     },
 	"dim_reduction":{
-		"methods_used": ["pca"],
-		"_methods_used": [
+		"_methods_used": ["pca"],
+		"methods_used": [
 		    "pca",
 		    "tsne",
 		    "factor_analysis",
@@ -59,7 +62,7 @@
 		},
 		"block_zifa":{
 			"n_components" : 2,
-			"n_blocks" : 1
+			"n_blocks" : 6
 		},
 		"tsne":{
 			"n_components" : 2

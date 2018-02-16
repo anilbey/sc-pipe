@@ -1,11 +1,12 @@
 configfile: 'config/config.json'
-SAMPLE = ['melanomaS2']
+SAMPLE = ['hgmm100']  #['melanomaS2']
 HDF5_OUTPUT = 'hdf5_data'
 SIMULATED_DATA_OUTPUT = config['simulated_data_output']
 ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
 LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
 CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
-
+#e.g. T_CODE=GRCh38, T_CODE=hg19
+T_CODE = config['transcriptome_code']
 
 def serialize(list_var):
 #   Serializes the list into a comma separated string
@@ -22,12 +23,25 @@ rules
 
 rule all:
     input:
-        expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv',
-                loc=config['splat_simulate']['de_loc_factor'],method=config['dim_reduction']['methods_used']+config['clustering']['methods_used'],sample=SAMPLE)
+        #config['cell_ranger_output']
+        expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv', loc=config['splat_simulate']['de_loc_factor'],method=config['dim_reduction']['methods_used']+config['clustering']['methods_used'],sample=SAMPLE)
     shell:
         'echo test rule all {input}'
 
-# rule cellranger count (parallel)
+# run it for each library them perform aggr
+rule cellranger_count: # (parallel)
+    input:
+        fastqs_dir = config['input_fastqs'],
+        reference = config['reference_transcriptome'],
+        id = config['unique_run_id']
+    output:
+        config['cell_ranger_output']
+    log:
+        out = LOG_FILES+'/cellranger_count/sample_{sample}.out',
+        err = LOG_FILES+'/cellranger_count/sample_{sample}.err'
+    shell:
+        'cellranger count --id={input.id} --transcriptome={input.reference} --fastqs={input.fastqs_dir} --nosecondary 2> {log.err} 1> {log.out}'
+
 # rule cellranger aggr
 
 rule cluster_results:
@@ -44,9 +58,10 @@ rule cluster_results:
 
 rule create_hdf5:
     input:
-        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/genes.tsv',
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/matrix.mtx',
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/GRCh38/barcodes.tsv'
+        genes_file =
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
         HDF5_OUTPUT+'/{sample}.h5'
     log:
@@ -69,9 +84,10 @@ rule simulate_data:
     output:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
     log:
-        LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/data_simulation.R"
+        out = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.err'
+    shell:
+        "Rscript scripts/data_simulation.R --input {input.sample_hdf5} --group_prob {params.group_prob} --dropout_present {params.dropout_present} --output {output} --loc {wildcards.loc} 2> {log.err} 1> {log.out}"
 
 
 rule preprocess_zheng17:
@@ -81,16 +97,15 @@ rule preprocess_zheng17:
     '''
     input:
         hdf5_file = rules.simulate_data.output 
-    params:
-        transpose = False
     wildcard_constraints:
         loc="\d(\.\d+)?"
     output:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     log:
-        LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.log'
-    script: 
-        "scripts/preprocess_zheng17.py"
+        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.err'
+    shell: 
+        "python scripts/preprocess_zheng17.py {input.hdf5_file} {output} 2> {log.err} 1> {log.out}"
 
 
 rule pca:
@@ -117,9 +132,10 @@ rule simlr:
     output:
         ANALYSIS_OUTPUT+'/simlr/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
-        LOG_FILES+'/simlr/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/simlr_large.py"
+        out = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.err'
+    shell:
+        "python scripts/simlr_large.py {input} {output} {params.n_components} {params.pca_components} {params.n_neighbours} {params.max_iter} 2> {log.err} 1> {log.out}"
 
 
 rule factor_analysis:
@@ -130,9 +146,10 @@ rule factor_analysis:
     output:
         ANALYSIS_OUTPUT+'/factor_analysis/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
-        LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.log' 
-    script:
-        "scripts/factor_analysis.py"
+        out = LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.err'
+    shell:
+        "python scripts/factor_analysis.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out} "
 
 rule tsne:
     input:
@@ -142,9 +159,10 @@ rule tsne:
     output:
         ANALYSIS_OUTPUT+'/tsne/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
-        LOG_FILES+'/tsne/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/tsne.py"
+        out = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.err'
+    shell:
+        "python scripts/tsne.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
 
 rule phenograph:
     input:
@@ -154,24 +172,12 @@ rule phenograph:
     output:
         ANALYSIS_OUTPUT+'/phenograph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
     log:
-        LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.log'
-    threads:8
-    script:
-        "scripts/pheno.py"
-
-rule louvain:
-    input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
-    params:
-        #TODO read from the config
-    output:
-        ANALYSIS_OUTPUT+'/louvain/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
-    log:
-        LOG_FILES+'/louvain/sample_{sample}loc_{loc}.log'
-    threads:8
-    script:
-        "scripts/louvain.py"
-
+        out = LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.err'
+    threads: 8
+    shell:
+        "python scripts/pheno.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
+'''
 rule griph:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
@@ -180,15 +186,15 @@ rule griph:
     output:
         ANALYSIS_OUTPUT+'/griph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
     log:
-        LOG_FILES+'/griph/sample_{sample}loc_{loc}.log'
+        out = LOG_FILES+'/griph/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/griph/sample_{sample}loc_{loc}.err'
     threads:8
-    script:
-        "scripts/griph.R"
-
-
-
+    shell:
+        "Rscript scripts/griph.R"
+'''
 
 rule zifa:
+    # by default n_blocks are estimated as n_cells/500 
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
@@ -197,9 +203,10 @@ rule zifa:
     output:
         ANALYSIS_OUTPUT+'/block_zifa/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
-        LOG_FILES+'/zifa/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/zifa.py"
+        out = LOG_FILES+'/zifa/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/zifa/sample_{sample}loc_{loc}.err'
+    shell:
+        "python scripts/zifa.py {input} {output} {params.n_components} --n_blocks {params.n_blocks} 1> {log.out} 2> {log.err}"
 
 
 

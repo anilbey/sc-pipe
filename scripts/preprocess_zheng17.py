@@ -1,10 +1,15 @@
 import h5py
 import scanpy.api as sc
+import argparse
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("input_file", help="path to the input hdf5 file")
+parser.add_argument("output_file", help="path to the output hdf5 file")
+args = parser.parse_args()
 
-def preprocess_zheng17(hdf5_file, out_path, threads):
-    
+def preprocess_zheng17(hdf5_file, out_path):
+
     h5f = h5py.File(hdf5_file,'r')
     matrix = h5f['matrix'].value
 
@@ -26,20 +31,18 @@ def preprocess_zheng17(hdf5_file, out_path, threads):
 
     # Writing the output hdf5 files
     matrix = adata.X
-    
+
     f = h5py.File(out_path, "w")
     f.create_dataset(name = 'matrix', data = matrix)
     gg = f.create_group('gene_attrs')
     cg = f.create_group('cell_attrs')
     print(h5f['gene_attrs'].keys())
     for key in h5f['gene_attrs'].keys():
-        gg.create_dataset(name = key, data =
-                h5f['gene_attrs'][key].value[mask1][mask2])
+        gg.create_dataset(name = key, data =h5f['gene_attrs'][key].value[mask1][mask2])
     for key in h5f['cell_attrs'].keys():
         cg.create_dataset(name = key, data = h5f['cell_attrs'][key].value)
 
     f.close()
     h5f.close()
-    
-preprocess_zheng17(snakemake.input.hdf5_file.__str__(),
-        snakemake.output.__str__(), snakemake.threads)
+
+preprocess_zheng17(args.input_file, args.output_file)
