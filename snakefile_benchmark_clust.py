@@ -119,7 +119,7 @@ rule pca:
         out = LOG_FILES+'/pca/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/pca/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/pca.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_pca.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
 
 rule simlr:
     input:
@@ -162,7 +162,7 @@ rule tsne:
         out = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/tsne.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_tsne.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
 
 rule phenograph:
     input:

@@ -39,7 +39,6 @@ def apply_simlr(input_file, output_file, n_components, pca_components, n_neighbo
     simlr = SIMLR.SIMLR_LARGE(num_of_rank=n_components, num_of_neighbor=n_neighbours, max_iter=max_iter)
     S, F,val, ind = simlr.fit(X)
     
-    np.savetxt(output_file, F, delimiter=",")
     df = pd.DataFrame(barcodes)
     df = pd.concat([df, pd.DataFrame(F)], axis=1)
     
