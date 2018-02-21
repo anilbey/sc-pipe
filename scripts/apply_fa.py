@@ -1,8 +1,5 @@
-from sklearn.decomposition import FactorAnalysis
-import h5py
-import numpy as np
 import argparse
-import pandas as pd
+from unsupervised_methods import FactorAnalysis
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")
@@ -17,19 +14,11 @@ args = parser.parse_args()
 
 def apply_fa(input_file, output_file, n_components, threads):
 
-    h5f = h5py.File(input_file, 'r')
-    matrix = h5f['matrix'][:]
-    barcodes = h5f['cell_attrs']['cell_names'].value
-    h5f.close()
-    matrix = np.log1p(matrix)
-    
-    fa = FactorAnalysis(n_components = n_components)
-    fa_Zhat = fa.fit_transform(matrix)
-    
-    df = pd.DataFrame(barcodes)
-    df = pd.concat([df, pd.DataFrame(fa_Zhat)], axis=1)
-    
-    df.to_csv(output_file,header=False, index=False)
+    fa = FactorAnalysis(n_components)
+    fa.load_from_hdf5(input_file)
+    fa.log_normalize()
+    fa.apply()
 
+    fa.write_csv(output_file)
 
 apply_fa(args.input_file, args.output_file, args.n_components, args.n_threads)

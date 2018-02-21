@@ -135,7 +135,7 @@ rule simlr:
         out = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/simlr_large.py {input} {output} {params.n_components} {params.pca_components} {params.n_neighbours} {params.max_iter} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_simlr.py {input} {output} {params.n_components} {params.pca_components} {params.n_neighbours} {params.max_iter} 2> {log.err} 1> {log.out}"
 
 
 rule factor_analysis:
@@ -149,7 +149,7 @@ rule factor_analysis:
         out = LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/factor_analysis/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/factor_analysis.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out} "
+        "python scripts/apply_fa.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out} "
 
 rule tsne:
     input:
@@ -176,7 +176,7 @@ rule phenograph:
         err = LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.err'
     threads: 8
     shell:
-        "python scripts/pheno.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_phenograph.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
 '''
 rule griph:
     input:
@@ -206,7 +206,7 @@ rule zifa:
         out = LOG_FILES+'/zifa/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/zifa/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/zifa.py {input} {output} {params.n_components} --n_blocks {params.n_blocks} 1> {log.out} 2> {log.err}"
+        "python scripts/apply_zifa.py {input} {output} {params.n_components} --n_blocks {params.n_blocks} 1> {log.out} 2> {log.err}"
 
 
 
