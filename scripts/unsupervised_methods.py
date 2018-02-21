@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from sklearn.cluster import KMeans, AgglomerativeClustering
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.decomposition import FactorAnalysis as sk_fa
@@ -115,6 +116,39 @@ class Phenograph(UnsupervisedMethods):
         communities, graph, Q = phenograph.cluster(data=self.matrix,k=self.n_neighbours,n_jobs=threads)
         self.results = communities
 
+class Silhouette(UnsupervisedMethods):
+
+    def __init__(self, model, k_min, k_max, metric):
+        self.model = model
+        self.k_min = k_min
+        self.k_max = k_max
+        self.metric = metric
+        
+
+    @classmethod
+    def init_with_kmeans(cls, n_init, n_jobs, k_min, k_max, metric):
+       
+        # K-means falls in local minima. That’s why it can be useful to restart it several times using n_init
+        # The classical EM-style algorithm is "full" and it is suggested for sparse data
+        
+        model = KMeans(algorithm='full', n_init=n_init, n_jobs=n_jobs)
+        return cls(model, k_min, k_max, metric)
+
+    @classmethod
+    def init_with_hierarcical(cls, h_affinity, h_linkage, k_min, k_max, metric):
+        model = AgglomerativeClustering(affinity=h_affinity, linkage=h_linkage, compute_full_tree=False)
+        return cls(model, k_min, k_max, metric)
+        
+
+    def apply(self):
+        
+        k_range = range(self.k_min, self.k_max)
+        
+        predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
+
+        silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in k_means_labels]
+        max_index = np.argmax(silhouette_scores)
+        self.results = predicted_labels[max_index]
 
 
 
