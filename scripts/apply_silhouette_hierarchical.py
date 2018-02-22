@@ -5,7 +5,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("input_file")
 parser.add_argument("output_file")
-parser.add_argument("h_affinity" help="Metric used to compute the linkage.")
+parser.add_argument("h_affinity", help="Metric used to compute the linkage.")
 parser.add_argument("h_linkage", help="The linkage criterion determines which distance to use between sets of observation.")
 parser.add_argument("k_min", type=int)
 parser.add_argument("k_max", type=int)
@@ -20,7 +20,6 @@ def apply_silhouette_hierarchical(input_file, output_file, h_affinity, h_linkage
 
     sh = Silhouette.init_with_hierarchical(h_affinity, h_linkage, k_min, k_max, metric)
     sh.load_from_csv(input_file)
-    sh.log_normalize()
     sh.apply()
     sh.write_csv(output_file)
 

@@ -16,7 +16,7 @@ def apply_zifa(input_file, output_file, n_components, n_blocks):
     zifa = Zifa(n_components, n_blocks)
     zifa.load_from_hdf5(input_file)
     zifa.log_normalize()
-
+    zifa.apply()
     zifa.write_csv(output_file)
 
 apply_zifa(args.input_file, args.output_file, args.n_components, args.n_blocks)

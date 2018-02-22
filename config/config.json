@@ -36,20 +36,39 @@
 	},
     "clustering":{
         "methods_used":[
-            "phenograph"
+            "phenograph",
+	    "griph"
         ],
         "phenograph":{
             "n_neighbours" : 30
-        }
+        },
+	"silhouette": 
+	{
+		"k_min": 5,
+		"k_max": 15,
+		"metric": "euclidean"
+	},
+	"hierarchical": 
+	{
+		"affinity": "euclidean",
+		"linkage": "ward"
+	},
+	"kmeans" : 
+	{
+		"n_init": 10,
+		"n_jobs": 5
+	}
     },
 	"dim_reduction":{
-		"_methods_used": ["pca"],
+		"clustering_methods" : [
+			"hierarchical",
+		       	"kmeans"],
+		"_methods_used": ["pca", "simlr"],
 		"methods_used": [
 		    "pca",
 		    "tsne",
 		    "factor_analysis",
-		    "block_zifa",
-		    "simlr"
+		    "block_zifa"
 		],
 		"simlr":{
 			"pca_components" : 500,
@@ -65,7 +84,8 @@
 			"n_blocks" : 6
 		},
 		"tsne":{
-			"n_components" : 2
+			"n_components" : 2,
+			"init": "pca"
 		},
 		"factor_analysis":{
 			"n_components" : 2

@@ -6,7 +6,7 @@ parser.add_argument("input_file", help="input matrix hdf5 file")
 parser.add_argument("output_file", help="path to the output csv file")
 parser.add_argument("n_components", help="the number of components",
         type=int)
-parser.add_argument("init", default='pca')
+parser.add_argument("init")
 parser.add_argument("--n_threads", help="the number of threads", type=int,
         default=1)
 args = parser.parse_args()

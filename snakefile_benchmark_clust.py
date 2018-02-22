@@ -8,14 +8,6 @@ CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 #e.g. T_CODE=GRCh38, T_CODE=hg19
 T_CODE = config['transcriptome_code']
 
-def serialize(list_var):
-#   Serializes the list into a comma separated string
-    if isinstance(list_var, list): 
-        return (','.join(map(str, list_var)))
-    else:
-        return list_var
-
-
 #ruleorder: simulate_data  > preprocess_zheng17
 '''
 rules
@@ -23,8 +15,11 @@ rules
 
 rule all:
     input:
-        #config['cell_ranger_output']
-        expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv', loc=config['splat_simulate']['de_loc_factor'],method=config['dim_reduction']['methods_used']+config['clustering']['methods_used'],sample=SAMPLE)
+        direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
+        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
+        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{c_method}_{sample}_sim_loc{loc}.csv',
+                loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
+
     shell:
         'echo test rule all {input}'
 
@@ -44,17 +39,41 @@ rule cellranger_count: # (parallel)
 
 # rule cellranger aggr
 
-rule cluster_results:
+
+# silhouette rules run for each dimensionality reduction results
+rule silhouette_hierarchical:
     input:
-        ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc'+'{loc}'+'.csv'
-    params:
-        n_clusters = len(config['splat_simulate']['group_prob'])
+        ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc'+'{loc}'+'.csv'    
     output:
-        ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+        ANALYSIS_OUTPUT+'/{method}/clusters/hierarchical_{sample}_sim_loc{loc}.csv'
     log:
-        LOG_FILES+'/k-means/sample_{sample}loc_{loc}.log'
-    script:
-        "scripts/k-means.py"
+        out = LOG_FILES+'/silhouette_hierarchical/{method}_sample_{sample}_loc_{loc}.out',
+        err = LOG_FILES+'/silhouette_hierarchical/{method}_sample_{sample}_loc_{loc}.err'
+    params:
+        affinity = config['clustering']['hierarchical']['affinity'],
+        linkage = config['clustering']['hierarchical']['linkage'],
+        k_min = config['clustering']['silhouette']['k_min'],
+        k_max = config['clustering']['silhouette']['k_max'],
+        metric = config['clustering']['silhouette']['metric']
+    shell:
+        'python scripts/apply_silhouette_hierarchical.py {input} {output} {params.affinity} {params.linkage} {params.k_min} {params.k_max} {params.metric} 2> {log.err} 1> {log.out}'
+
+rule silhouette_kmeans:
+    input:
+        ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc'+'{loc}'+'.csv'    
+    output:
+        ANALYSIS_OUTPUT+'/{method}/clusters/kmeans_{sample}_sim_loc{loc}.csv'
+    log:
+        out = LOG_FILES+'/silhouette_kmeans/{method}_sample_{sample}_loc_{loc}.out',
+        err = LOG_FILES+'/silhouette_kmeans/{method}_sample_{sample}_loc_{loc}.err'
+    params:
+        n_init = config['clustering']['kmeans']['n_init'],
+        n_jobs = config['clustering']['kmeans']['n_jobs'],
+        k_min = config['clustering']['silhouette']['k_min'],
+        k_max = config['clustering']['silhouette']['k_max'],
+        metric = config['clustering']['silhouette']['metric']
+    shell:
+        'python scripts/apply_silhouette_kmeans.py {input} {output} {params.n_init} {params.n_jobs} {params.k_min} {params.k_max} {params.metric} 2> {log.err} 1> {log.out} '
 
 rule create_hdf5:
     input:
@@ -155,14 +174,15 @@ rule tsne:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
-        n_components = config['dim_reduction']['tsne']['n_components']
+        n_components = config['dim_reduction']['tsne']['n_components'],
+        init = config['dim_reduction']['tsne']['init']
     output:
         ANALYSIS_OUTPUT+'/tsne/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
         out = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/tsne/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/apply_tsne.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_tsne.py {input} {output} {params.n_components} {params.init}  2> {log.err} 1> {log.out}"
 
 rule phenograph:
     input:
@@ -170,28 +190,28 @@ rule phenograph:
     params:
         n_neighbours = config['clustering']['phenograph']['n_neighbours']
     output:
-        ANALYSIS_OUTPUT+'/phenograph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+        ANALYSIS_OUTPUT+'/phenograph/clusters/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
         out = LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/phenograph/sample_{sample}loc_{loc}.err'
     threads: 8
     shell:
         "python scripts/apply_phenograph.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
-'''
+
 rule griph:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
         #TODO read from the config
     output:
-        ANALYSIS_OUTPUT+'/griph/clusters/{sample}_sim_loc'+'{loc}'+'clusters.csv'
+        ANALYSIS_OUTPUT+'/griph/clusters/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
         out = LOG_FILES+'/griph/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/griph/sample_{sample}loc_{loc}.err'
     threads:8
     shell:
-        "Rscript scripts/griph.R"
-'''
+        "Rscript scripts/apply_griph.R --input {input} --output {output} --threads {threads} 2> {log.err} 1> {log.out}"
+
 
 rule zifa:
     # by default n_blocks are estimated as n_cells/500 

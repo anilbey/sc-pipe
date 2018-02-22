@@ -5,8 +5,8 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("input_file")
 parser.add_argument("output_file")
-parser.add_argument("--n_init", type=int, default=10)
-parser.add_argument("--n_jobs", type=int, default=1)
+parser.add_argument("n_init", type=int)
+parser.add_argument("n_jobs", type=int)
 parser.add_argument("k_min", type=int)
 parser.add_argument("k_max", type=int)
 parser.add_argument("metric")
@@ -20,7 +20,6 @@ def apply_silhouette_kmeans(input_file, output_file, n_init, n_jobs, k_min, k_ma
 
     skm = Silhouette.init_with_kmeans(n_init, n_jobs, k_min, k_max, metric)
     skm.load_from_csv(input_file)
-    skm.log_normalize()
     skm.apply()
     skm.write_csv(output_file)
 

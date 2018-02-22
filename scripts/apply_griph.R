@@ -1,5 +1,12 @@
 library(griph)
 library(rhdf5)
+library(argparse)
+
+parser <- ArgumentParser(description= 'simulates data')
+parser$add_argument('--input', required=TRUE)
+parser$add_argument('--output', required=TRUE)
+parser$add_argument('--threads', required=TRUE, type='integer')
+args = parser$parse_args()
 
 
 
@@ -15,4 +22,4 @@ apply_griph = function(input_file, output_file, threads)
 
 }
 
-apply_griph(snakemake@input[[1]], snakemake@output[[1]], snakemake@threads)
+apply_griph(args$input, args$output, args$threads)
