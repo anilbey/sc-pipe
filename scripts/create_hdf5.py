@@ -5,10 +5,10 @@ import h5py
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("genes_file", help="tsv file containing gene names")
-parser.add_argument("matrix_file", help="file containing the geneXcell matrix")
-parser.add_argument("barcodes_file", help="file containing the cell ids(barcodes)")
-parser.add_argument("output_file", help="path to the output hdf5 file")
+parser.add_argument("-g", "--genes_file", required=True, help="tsv file containing gene names")
+parser.add_argument("-m", "--matrix_file", required=True, help="file containing the geneXcell matrix")
+parser.add_argument("-b", "--barcodes_file", required=True, help="file containing the cell ids(barcodes)")
+parser.add_argument("-o", "--output_file", required=True, help="path to the output hdf5 file")
 parser.add_argument("--n_threads", help="the number of threads", type=int,
         default=1)
 args = parser.parse_args()

@@ -1,5 +1,5 @@
 configfile: 'config/config.json'
-SAMPLE = ['hgmm100']  #['melanomaS2']
+SAMPLE = ['melanomaS2']  #['hgmm100']  
 HDF5_OUTPUT = 'hdf5_data'
 SIMULATED_DATA_OUTPUT = config['simulated_data_output']
 ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
@@ -24,13 +24,17 @@ rule all:
         'echo test rule all {input}'
 
 # run it for each library them perform aggr
+# TODO: use wildcard {sample}, unique_run_id must come from {sample}
+# TODO: bind it with the create_hdf5 rule, create an output dependency
 rule cellranger_count: # (parallel)
     input:
         fastqs_dir = config['input_fastqs'],
         reference = config['reference_transcriptome'],
         id = config['unique_run_id']
     output:
-        config['cell_ranger_output']
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     log:
         out = LOG_FILES+'/cellranger_count/sample_{sample}.out',
         err = LOG_FILES+'/cellranger_count/sample_{sample}.err'
@@ -39,6 +43,60 @@ rule cellranger_count: # (parallel)
 
 # rule cellranger aggr
 
+
+
+rule create_hdf5:
+    input:
+        genes_file =
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+    output:
+        HDF5_OUTPUT+'/{sample}.h5'
+    log:
+        out = LOG_FILES+'/create_hdf5/sample_{sample}.out',
+        err = LOG_FILES+'/create_hdf5/sample_{sample}.err'
+    shell:
+        'python scripts/create_hdf5.py -g {input.genes_file} -m {input.matrix_file} -b {input.barcodes_file} -o {output} 2> {log.err} 1> {log.out} '
+
+rule simulate_data:
+    '''
+    group_prob can be a list
+    '''
+    input:
+        sample_hdf5 = rules.create_hdf5.output
+    params:
+        group_prob = config['splat_simulate']['group_prob'],
+        dropout_present = config['splat_simulate']['dropout_present']
+    wildcard_constraints:
+        loc="\d(\.\d+)?"
+    output:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
+    log:
+        out = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.err'
+    shell:
+        "Rscript scripts/data_simulation.R --input {input.sample_hdf5} --group_prob {params.group_prob} --dropout_present {params.dropout_present} --output {output} --loc {wildcards.loc} 2> {log.err} 1> {log.out}"
+
+
+rule preprocess_zheng17:
+    '''
+    regex pattern 
+        loc: 0.25, 0.5, 1, 1.4, 2
+    '''
+    input:
+        hdf5_file = rules.simulate_data.output 
+    wildcard_constraints:
+        loc="\d(\.\d+)?"
+    params:
+        n_top_genes = config['preprocess']['zheng17']['n_top_genes']
+    output:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
+    log:
+        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.out',
+        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.err'
+    shell: 
+        "python scripts/preprocess_zheng17.py -i {input.hdf5_file} -o {output} --n_top_genes {} 2> {log.err} 1> {log.out}"
 
 # silhouette rules run for each dimensionality reduction results
 rule silhouette_hierarchical:
@@ -74,58 +132,6 @@ rule silhouette_kmeans:
         metric = config['clustering']['silhouette']['metric']
     shell:
         'python scripts/apply_silhouette_kmeans.py {input} {output} {params.n_init} {params.n_jobs} {params.k_min} {params.k_max} {params.metric} 2> {log.err} 1> {log.out} '
-
-rule create_hdf5:
-    input:
-        genes_file =
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
-    output:
-        HDF5_OUTPUT+'/{sample}.h5'
-    log:
-        out = LOG_FILES+'/create_hdf5/sample_{sample}.out',
-        err = LOG_FILES+'/create_hdf5/sample_{sample}.err'
-    shell:
-        'python scripts/create_hdf5.py {input.genes_file} {input.matrix_file} {input.barcodes_file} {output} 2> {log.err} 1> {log.out} '
-
-rule simulate_data:
-    '''
-    group_prob can be a list
-    '''
-    input:
-        sample_hdf5 = rules.create_hdf5.output
-    params:
-        group_prob = config['splat_simulate']['group_prob'],
-        dropout_present = config['splat_simulate']['dropout_present']
-    wildcard_constraints:
-        loc="\d(\.\d+)?"
-    output:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
-    log:
-        out = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.out',
-        err = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.err'
-    shell:
-        "Rscript scripts/data_simulation.R --input {input.sample_hdf5} --group_prob {params.group_prob} --dropout_present {params.dropout_present} --output {output} --loc {wildcards.loc} 2> {log.err} 1> {log.out}"
-
-
-rule preprocess_zheng17:
-    '''
-    regex pattern 
-        loc: 0.25, 0.5, 1, 1.4, 2
-    '''
-    input:
-        hdf5_file = rules.simulate_data.output 
-    wildcard_constraints:
-        loc="\d(\.\d+)?"
-    output:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
-    log:
-        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.out',
-        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.err'
-    shell: 
-        "python scripts/preprocess_zheng17.py {input.hdf5_file} {output} 2> {log.err} 1> {log.out}"
-
 
 rule pca:
     input:

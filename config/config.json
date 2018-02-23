@@ -1,16 +1,17 @@
 {
-    "simulated_data_output": "simulated/hgmm100/6_groups",
-    "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs/hgmm_100_fastqs",
+    "simulated_data_output": "simulated/23-02-2018",
+    "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs/melanomaS2_fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_output",
-    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-hg19_and_mm10-1.2.0",
-    "transcriptome_code": "hg19",
-    "unique_run_id": "hgmm_100",
+    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-GRCh38-1.2.0",
+    "transcriptome_code": "GRCh38",
+    "_transcriptome_code": "hg19",
+    "unique_run_id": "cr_run_id_1",
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
         "de_prob": 0.1,
         "de_scale_factor": 0.3,
-       	"de_loc_factor": [1],
-	"_de_loc_factor": [
+       	"_de_loc_factor": [1],
+    	"de_loc_factor": [
             0.25,
             0.5,
             0.75,
@@ -19,9 +20,7 @@
             1.5,
             2,
             2.5,
-            3,
-            3.5,
-            4
+            3
         ],
         "de_dr_prob": 0.5,
         "group_prob": [
@@ -34,10 +33,17 @@
         ],
         "dropout_present": true
 	},
+    "preprocess": 
+    {
+        "zheng17":
+        {
+            "n_top_genes":1000
+        }
+    },
     "clustering":{
         "methods_used":[
             "phenograph",
-	    "griph"
+            "griph"
         ],
         "phenograph":{
             "n_neighbours" : 30
@@ -68,27 +74,28 @@
 		    "pca",
 		    "tsne",
 		    "factor_analysis",
-		    "block_zifa"
+		    "block_zifa",
+            "simlr"
 		],
 		"simlr":{
 			"pca_components" : 500,
 			"n_neighbours" : 50,
 			"max_iter" : 10,
-			"n_components" : 3
+			"n_components" : 10
 		},
 		"pca":{
-			"n_components" : 2
+			"n_components" : 10
 		},
 		"block_zifa":{
-			"n_components" : 2,
-			"n_blocks" : 6
+			"n_components" : 10,
+			"n_blocks" : 8
 		},
 		"tsne":{
-			"n_components" : 2,
+			"n_components" : 10,
 			"init": "pca"
 		},
 		"factor_analysis":{
-			"n_components" : 2
+			"n_components" : 10
 		}
     
     }

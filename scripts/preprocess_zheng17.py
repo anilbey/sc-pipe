@@ -4,11 +4,12 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("input_file", help="path to the input hdf5 file")
-parser.add_argument("output_file", help="path to the output hdf5 file")
+parser.add_argument("-i", "input_file", required=True, help="path to the input hdf5 file")
+parser.add_argument("-o", "--output_file", required=True, help="path to the output hdf5 file")
+parser.add_argument("--n_top_genes", required=True, help="the number of genes to be selected")
 args = parser.parse_args()
 
-def preprocess_zheng17(hdf5_file, out_path):
+def preprocess_zheng17(hdf5_file, out_path, n_top_genes):
 
     h5f = h5py.File(hdf5_file,'r')
     matrix = h5f['matrix'].value
@@ -18,11 +19,10 @@ def preprocess_zheng17(hdf5_file, out_path):
 
     filtered_matrix = matrix [:,mask1]
 
-
     adata = sc.AnnData(filtered_matrix)
     #sc.pp.filter_genes(adata, min_counts=1)  # only consider genes with more than 1 count
     sc.pp.normalize_per_cell(adata)          # normalize with total UMI count per cell
-    filter_result = sc.pp.filter_genes_dispersion(adata.X, flavor='cell_ranger', n_top_genes=1000, log=False)
+    filter_result = sc.pp.filter_genes_dispersion(adata.X, flavor='cell_ranger', n_top_genes=n_top_genes, log=False)
     # filter results is a recarray
     # mask2 to select the top 1000 genes
     mask2 = filter_result.gene_subset
@@ -45,4 +45,4 @@ def preprocess_zheng17(hdf5_file, out_path):
     f.close()
     h5f.close()
 
-preprocess_zheng17(args.input_file, args.output_file)
+preprocess_zheng17(args.input_file, args.output_file, args.n_top_genes)
