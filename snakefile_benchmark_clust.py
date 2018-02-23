@@ -96,7 +96,7 @@ rule preprocess_zheng17:
         out = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.err'
     shell: 
-        "python scripts/preprocess_zheng17.py -i {input.hdf5_file} -o {output} --n_top_genes {} 2> {log.err} 1> {log.out}"
+        "python scripts/preprocess_zheng17.py -i {input.hdf5_file} -o {output} --n_top_genes {params.n_top_genes} 2> {log.err} 1> {log.out}"
 
 # silhouette rules run for each dimensionality reduction results
 rule silhouette_hierarchical:

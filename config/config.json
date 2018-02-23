@@ -84,14 +84,14 @@
 			"n_components" : 10
 		},
 		"pca":{
-			"n_components" : 10
+			"n_components" : 50
 		},
 		"block_zifa":{
 			"n_components" : 10,
 			"n_blocks" : 8
 		},
 		"tsne":{
-			"n_components" : 10,
+			"n_components" : 2,
 			"init": "pca"
 		},
 		"factor_analysis":{

@@ -4,9 +4,9 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "input_file", required=True, help="path to the input hdf5 file")
+parser.add_argument("-i", "--input_file", required=True, help="path to the input hdf5 file")
 parser.add_argument("-o", "--output_file", required=True, help="path to the output hdf5 file")
-parser.add_argument("--n_top_genes", required=True, help="the number of genes to be selected")
+parser.add_argument("--n_top_genes", required=True, type=int, help="the number of genes to be selected")
 args = parser.parse_args()
 
 def preprocess_zheng17(hdf5_file, out_path, n_top_genes):
