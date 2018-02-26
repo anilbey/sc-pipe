@@ -95,8 +95,13 @@ class Simlr(UnsupervisedMethod):
         self.max_iter = max_iter
         self.threads = threads
 
-    def apply(self):
-        X = self.matrix
+    def set_params(self, n_clusters):
+        self.n_components = n_clusters
+        return self
+
+    def fit_predict(self, matrix):
+        X = matrix
+    
         # Selecting 500 features with PCA
         if X.shape[1]>500:
         # fast_pca assumes the number of cells > 500 therefore try-catch
@@ -106,8 +111,11 @@ class Simlr(UnsupervisedMethod):
                 pass    
         # Running Simlr 
         simlr = SIMLR.SIMLR_LARGE(num_of_rank=self.n_components, num_of_neighbor=self.n_neighbours, max_iter=self.max_iter)
-        S, F,val, ind = simlr.fit(X)
-        self.results = F
+        S, F, val, ind = simlr.fit(X)
+        return F
+
+    def apply(self):
+        self.results = fit_predict(self.matrix)
 
 class Phenograph(UnsupervisedMethod):
 
@@ -143,13 +151,19 @@ class Silhouette(UnsupervisedMethod):
     def init_with_hierarchical(cls, h_affinity, h_linkage, k_min, k_max, metric):
         model = AgglomerativeClustering(affinity=h_affinity, linkage=h_linkage, compute_full_tree=False)
         return cls(model, k_min, k_max, metric)
-        
+    
+    @classmethod
+    def init_with_simlr(cls, n_components, pca_components, n_neighbours, max_iter, threads, k_min, k_max, metric):
+        model = Simlr(n_components, pca_components, n_neighbours, max_iter, threads)
+        return cls(model, k_min, k_max, metric)
 
     def apply(self):
         
         k_range = range(self.k_min, self.k_max)
-        
-        predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
+        if isinstance(self.model, Simlr):
+            predicted_labels =  [KMeans().fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix)) for k in k_range]
+        else:
+            predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
 
         silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in predicted_labels]
         max_index = np.argmax(silhouette_scores)

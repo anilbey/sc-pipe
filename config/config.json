@@ -43,7 +43,8 @@
     "clustering":{
         "methods_used":[
             "phenograph",
-            "griph"
+            "griph",
+            "simlr"
         ],
         "phenograph":{
             "n_neighbours" : 30
@@ -54,6 +55,13 @@
 		"k_max": 15,
 		"metric": "euclidean"
 	},
+    "simlr":
+    {
+        "pca_components" : 500,
+        "n_neighbours" : 50,
+        "max_iter" : 10,
+        "n_components" : 10
+    },
 	"hierarchical": 
 	{
 		"affinity": "euclidean",
@@ -74,15 +82,8 @@
 		    "pca",
 		    "tsne",
 		    "factor_analysis",
-		    "block_zifa",
-            "simlr"
+		    "block_zifa"
 		],
-		"simlr":{
-			"pca_components" : 500,
-			"n_neighbours" : 50,
-			"max_iter" : 10,
-			"n_components" : 10
-		},
 		"pca":{
 			"n_components" : 50
 		},

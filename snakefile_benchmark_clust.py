@@ -150,17 +150,21 @@ rule simlr:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     params:
-        n_components = config['dim_reduction']['simlr']['n_components'],
-        pca_components = config['dim_reduction']['simlr']['pca_components'],
-        n_neighbours = config['dim_reduction']['simlr']['n_neighbours'],
-        max_iter = config['dim_reduction']['simlr']['max_iter']
+        n_components = config['clustering']['simlr']['n_components'],
+        pca_components = config['clustering']['simlr']['pca_components'],
+        n_neighbours = config['clustering']['simlr']['n_neighbours'],
+        max_iter = config['clustering']['simlr']['max_iter'],
+        # silhouette parameters
+        k_min = config['clustering']['silhouette']['k_min'],
+        k_max = config['clustering']['silhouette']['k_max'],
+        metric = config['clustering']['silhouette']['metric']
     output:
-        ANALYSIS_OUTPUT+'/simlr/{sample}_sim_loc'+'{loc}'+'.csv'
+        ANALYSIS_OUTPUT+'/simlr/clusters/{sample}_sim_loc'+'{loc}'+'.csv'
     log:
         out = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.out',
         err = LOG_FILES+'/simlr/sample_{sample}loc_{loc}.err'
     shell:
-        "python scripts/apply_simlr.py {input} {output} {params.n_components} {params.pca_components} {params.n_neighbours} {params.max_iter} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_silhouette_simlr.py --input {input} --output {output} --n_components {params.n_components} --pca_components {params.pca_components} --n_neighbours {params.n_neighbours} --max_iter {params.max_iter} --k_min {params.k_min} --k_max {params.k_max} --metric {params.metric}  2> {log.err} 1> {log.out}"
 
 
 rule factor_analysis:
