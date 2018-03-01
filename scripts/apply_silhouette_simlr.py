@@ -26,6 +26,6 @@ def apply_silhouette_simlr(input_file, output_file, n_components, pca_components
     ss.write_csv(output_file)
 
 
-apply_silhouette_simlr(args.input_file, args.output_file, args.n_components, args.pca_components, args.n_neighbours, args.max_iter, args.k_min, args.k_max, args.metric, args.n_threads)
+apply_silhouette_simlr(args.input, args.output, args.n_components, args.pca_components, args.n_neighbours, args.max_iter, args.k_min, args.k_max, args.metric, args.n_threads)
 
 

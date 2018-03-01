@@ -1,3 +1,5 @@
+import glob
+
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']  #['hgmm100']  
 HDF5_OUTPUT = 'hdf5_data'
@@ -13,44 +15,54 @@ T_CODE = config['transcriptome_code']
 rules
 '''
 
+def get_all_fastqs(path):
+    fastqs =  glob.glob(path+'/*.fastq.gz')
+
 rule all:
     input:
         direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
         dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
         dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{c_method}_{sample}_sim_loc{loc}.csv',
-                loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
-
+                loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE),
+#TODO input function        fastqs = get_all_fastqs(config['input_fastqs'])
     shell:
         'echo test rule all {input}'
+
+#rule fastqc:
 
 # run it for each library them perform aggr
 # TODO: use wildcard {sample}, unique_run_id must come from {sample}
 # TODO: bind it with the create_hdf5 rule, create an output dependency
+
+'''
 rule cellranger_count: # (parallel)
     input:
-        fastqs_dir = config['input_fastqs'],
-        reference = config['reference_transcriptome'],
+        fastqs_dir = config['input_fastqs']+'/{sample}',
+        reference = config['reference_transcriptome'] 
+    params:
         id = config['unique_run_id']
     output:
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     log:
         out = LOG_FILES+'/cellranger_count/sample_{sample}.out',
         err = LOG_FILES+'/cellranger_count/sample_{sample}.err'
     shell:
         'cellranger count --id={input.id} --transcriptome={input.reference} --fastqs={input.fastqs_dir} --nosecondary 2> {log.err} 1> {log.out}'
+'''
 
 # rule cellranger aggr
 
 
-
 rule create_hdf5:
     input:
-        genes_file =
+        #genes_file = rules.cellranger_count.output.genes_file,
         CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        #matrix_file = rules.cellranger_count.output.matrix_file,
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        #barcodes_file = rules.cellranger_count.output.barcodes_file
+        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
         HDF5_OUTPUT+'/{sample}.h5'
     log:
