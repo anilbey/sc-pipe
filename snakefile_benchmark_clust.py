@@ -58,11 +58,11 @@ rule cellranger_count: # (parallel)
 rule create_hdf5:
     input:
         #genes_file = rules.cellranger_count.output.genes_file,
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
         #matrix_file = rules.cellranger_count.output.matrix_file,
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
         #barcodes_file = rules.cellranger_count.output.barcodes_file
-        CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
         HDF5_OUTPUT+'/{sample}.h5'
     log:

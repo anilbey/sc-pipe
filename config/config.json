@@ -51,7 +51,7 @@
             "simlr"
         ],
         "phenograph":{
-            "n_neighbours" : 30
+            "n_neighbours" : 100
         },
 	"silhouette": 
 	{
@@ -89,7 +89,7 @@
 		    "block_zifa"
 		],
 		"pca":{
-			"n_components" : 50
+			"n_components" : 5
 		},
 		"block_zifa":{
 			"n_components" : 2,
