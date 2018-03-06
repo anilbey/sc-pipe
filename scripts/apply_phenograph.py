@@ -15,9 +15,6 @@ args = parser.parse_args()
 def apply_pheno(input_file, output_file, n_neighbours, threads):
     
     pheno = Phenograph(n_neighbours, threads)
-    print(pheno)
-    print(type(pheno))
-    print(dir(pheno))
     pheno.load_from_hdf5(input_file)
     pheno.log_normalize()
     pheno.apply()

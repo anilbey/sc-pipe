@@ -2,9 +2,9 @@
     "simulated_data_output": "simulated/9_groups",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_output",
-    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-GRCh38-1.2.0",
-    "transcriptome_code": "GRCh38",
-    "_transcriptome_code": "hg19",
+    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-hg19-1.2.0",
+    "_transcriptome_code": "GRCh38",
+    "transcriptome_code": "hg19",
     "unique_run_id": "cr_run_id_1",
 	"real_datasets": ["zeisel.loom"],
 	"splat_simulate":{
