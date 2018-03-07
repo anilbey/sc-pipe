@@ -1,16 +1,12 @@
 {
-    "real_data_output": "analysis_output",
     "simulated_data_output": "simulated/9_groups",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
-    "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_output",
-    "reference_transcriptome": "/cluster/work/bewi/members/tuncel/data/references/refdata-cellranger-hg19-1.2.0",
+    "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
+    "reference_transcriptome": "/cluster/work/bewi/ngs/databases/cellranger/refdata-cellranger-hg19-1.2.0",
     "_transcriptome_code": "GRCh38",
     "transcriptome_code": "hg19",
     "unique_run_id": "cr_run_id_1",
 	"real_datasets": ["zeisel.loom"],
-  "cellranger_count":{
-    "local_cores" : 16
-  },
 	"splat_simulate":{
         "de_prob": 0.1,
         "de_scale_factor": 0.3,
@@ -41,7 +37,7 @@
         ],
         "dropout_present": true
 	},
-    "preprocess":
+    "preprocess": 
     {
         "zheng17":
         {
@@ -55,10 +51,9 @@
             "simlr"
         ],
         "phenograph":{
-            "n_neighbours" : 100,
-            "n_jobs" : 8
+            "n_neighbours" : 100
         },
-	"silhouette":
+	"silhouette": 
 	{
 		"k_min": 5,
 		"k_max": 15,
@@ -71,12 +66,12 @@
         "max_iter" : 15,
         "n_components" : 10
     },
-	"hierarchical":
+	"hierarchical": 
 	{
 		"affinity": "euclidean",
 		"linkage": "ward"
 	},
-	"kmeans" :
+	"kmeans" : 
 	{
 		"n_init": 10,
 		"n_jobs": 5
@@ -107,6 +102,6 @@
 		"factor_analysis":{
 			"n_components" : 10
 		}
-
+    
     }
 }

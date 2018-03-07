@@ -27,17 +27,19 @@ rule cellranger_count: # (parallel)
         fastqs_dir = config['input_fastqs']+'/{sample}',
         reference = config['reference_transcriptome']
     params:
+        cr_out = CELL_RANGER_OUTPUT_PATH,
         id = u_run_id(),
         local_cores = config['cellranger_count']['local_cores']
     output:
-        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        genes_file = cr_out +'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        matrix_file = cr_out +'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        barcodes_file = cr_out+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     log:
         out = LOG_FILES+'/cellranger_count/sample_{sample}.out',
         err = LOG_FILES+'/cellranger_count/sample_{sample}.err'
     shell:
-        'cellranger count --id={params.id} --transcriptome={input.reference} --localcores={params.local_cores} --fastqs={input.fastqs_dir} --nosecondary 2> {log.err} 1> {log.out}'
+        '(cd {params.cr_out}; cellranger count --id=20150306_22_27 --transcriptome={input.reference} --localcores={params.local_cores} --fastqs={input.fastqs_dir} --nosecondary 2>{log.err} 1> {log.out})'
+
 
 rule create_hdf5:
     input:
