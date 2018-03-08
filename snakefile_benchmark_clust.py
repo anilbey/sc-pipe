@@ -9,7 +9,7 @@ LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
 CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 #e.g. T_CODE=GRCh38, T_CODE=hg19
 T_CODE = config['transcriptome_code']
-
+RUN_ID = config['unique_run_id']
 #ruleorder: simulate_data  > preprocess_zheng17
 '''
 rules
@@ -22,7 +22,7 @@ rule all:
     input:
         direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
         dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
-        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{c_method}_{sample}_sim_loc{loc}.csv',
+        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_loc{loc}.csv',
                 loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE),
 #TODO input function        fastqs = get_all_fastqs(config['input_fastqs'])
     shell:
@@ -58,11 +58,11 @@ rule cellranger_count: # (parallel)
 rule create_hdf5:
     input:
         #genes_file = rules.cellranger_count.output.genes_file,
-        genes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        genes_file = CELL_RANGER_OUTPUT_PATH+'/'+RUN_ID+'/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
         #matrix_file = rules.cellranger_count.output.matrix_file,
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        matrix_file = CELL_RANGER_OUTPUT_PATH+'/'+RUN_ID+'/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
         #barcodes_file = rules.cellranger_count.output.barcodes_file
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/{sample}/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/'+RUN_ID+'/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
         HDF5_OUTPUT+'/{sample}.h5'
     log:
@@ -115,7 +115,7 @@ rule silhouette_hierarchical:
     input:
         ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc'+'{loc}'+'.csv'    
     output:
-        ANALYSIS_OUTPUT+'/{method}/clusters/hierarchical_{sample}_sim_loc{loc}.csv'
+        ANALYSIS_OUTPUT+'/silhouette-{method}/clusters/hierarchical_{sample}_sim_loc{loc}.csv'
     log:
         out = LOG_FILES+'/silhouette_hierarchical/{method}_sample_{sample}_loc_{loc}.out',
         err = LOG_FILES+'/silhouette_hierarchical/{method}_sample_{sample}_loc_{loc}.err'
@@ -132,7 +132,7 @@ rule silhouette_kmeans:
     input:
         ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc'+'{loc}'+'.csv'    
     output:
-        ANALYSIS_OUTPUT+'/{method}/clusters/kmeans_{sample}_sim_loc{loc}.csv'
+        ANALYSIS_OUTPUT+'/silhouette-{method}/clusters/kmeans_{sample}_sim_loc{loc}.csv'
     log:
         out = LOG_FILES+'/silhouette_kmeans/{method}_sample_{sample}_loc_{loc}.out',
         err = LOG_FILES+'/silhouette_kmeans/{method}_sample_{sample}_loc_{loc}.err'
