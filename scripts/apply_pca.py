@@ -18,6 +18,6 @@ def apply_pca(input_file, output_file, n_components, threads):
     pca.log_normalize()
     pca.apply()
 
-    pca.write_csv(output_file)
+    pca.write_csv(output_file, dim_red_res=True)
 
 apply_pca(args.input_file, args.output_file, args.n_components, args.n_threads)

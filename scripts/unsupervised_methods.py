@@ -33,11 +33,15 @@ class UnsupervisedMethod(metaclass=ABCMeta):
         h5f.close()
  
 
-    def write_csv(self, output_file):
+    def write_csv(self, output_file, dim_red_res=False):
         df = pd.DataFrame(self.barcodes)
         df = pd.concat([df, pd.DataFrame(self.results)], axis=1)
-        df.columns = ['cell_barcode','cluster']
-        df.to_csv(output_file,header=True, index=False)
+        if dim_red_res:
+            df.to_csv(output_file,header=False, index=False)
+        else:
+            # final clustering results
+            df.columns = ['cell_barcode','cluster']
+            df.to_csv(output_file,header=True, index=False)
 
     @abstractmethod
     def apply(self):

@@ -1,4 +1,5 @@
 import glob
+import numpy as np
 
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']  #['hgmm100']  
@@ -15,15 +16,20 @@ RUN_ID = config['unique_run_id']
 rules
 '''
 
+def dirichlet_group_prob(size):
+    dirr =  np.random.dirichlet(np.ones(size))
+    return dirr
+    
+
 def get_all_fastqs(path):
     fastqs =  glob.glob(path+'/*.fastq.gz')
 
 rule all:
     input:
-        direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_loc'+'{loc}'+'.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
-        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
+        direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv',de_prob= config['splat_simulate']['de_loc_factor'], loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
+#        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
         dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_loc{loc}.csv',
-                loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE),
+                loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
 #TODO input function        fastqs = get_all_fastqs(config['input_fastqs'])
     shell:
         'echo test rule all {input}'
@@ -71,24 +77,36 @@ rule create_hdf5:
     shell:
         'python scripts/create_hdf5.py -g {input.genes_file} -m {input.matrix_file} -b {input.barcodes_file} -o {output} 2> {log.err} 1> {log.out} '
 
+rule estimate_params:
+    input:
+        sample_hdf5 = rules.create_hdf5.output
+    output:
+        SIMULATED_DATA_OUTPUT+'/{sample}_estimated.rda'
+    log:
+        out = LOG_FILES+'/estimate_params/sample_{sample}.out',
+        err = LOG_FILES+'/estimate_params/sample_{sample}.err'
+    shell:
+        'Rscript scripts/estimate_params.R --input {input.sample_hdf5} --output {output} 2> {log.err} 1> {log.out}'
+
 rule simulate_data:
     '''
     group_prob can be a list
     '''
     input:
-        sample_hdf5 = rules.create_hdf5.output
+        sample_hdf5 = rules.estimate_params.output
     params:
-        group_prob = config['splat_simulate']['group_prob'],
+        group_prob = dirichlet_group_prob(config['splat_simulate']['group_size']),
         dropout_present = config['splat_simulate']['dropout_present']
     wildcard_constraints:
-        loc="\d(\.\d+)?"
+        loc="\d(\.\d+)?",
+        de_prob="\d(\.\d+)?"
     output:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}.h5'
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_de{de_prob}_loc{loc}.h5'
     log:
-        out = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.out',
-        err = LOG_FILES+'/simulate_data/sample_{sample}loc_{loc}.err'
+        out = LOG_FILES+'/simulate_data/sample_{sample}_de{de_prob}_loc_{loc}.out',
+        err = LOG_FILES+'/simulate_data/sample_{sample}_de{de_prob}_loc_{loc}.err'
     shell:
-        "Rscript scripts/data_simulation.R --input {input.sample_hdf5} --group_prob {params.group_prob} --dropout_present {params.dropout_present} --output {output} --loc {wildcards.loc} 2> {log.err} 1> {log.out}"
+        "Rscript scripts/data_simulation.R --input {input.sample_hdf5} --group_prob {params.group_prob} --dropout_present {params.dropout_present} --output {output} --loc {wildcards.loc} --de_prob {wildcards.de_prob} 2> {log.err} 1> {log.out}"
 
 
 rule preprocess_zheng17:
@@ -105,8 +123,8 @@ rule preprocess_zheng17:
     output:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_loc{loc}_zheng17.h5'
     log:
-        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.out',
-        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}loc_{loc}.err'
+        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}_loc_{loc}.out',
+        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}_loc_{loc}.err'
     shell: 
         "python scripts/preprocess_zheng17.py -i {input.hdf5_file} -o {output} --n_top_genes {params.n_top_genes} 2> {log.err} 1> {log.out}"
 

@@ -1,6 +1,6 @@
 {
     "real_data_output": "analysis_output",
-    "simulated_data_output": "simulated/9_groups",
+    "simulated_data_output": "simulated/9_groups_09.03.2018",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
     "reference_transcriptome": "/cluster/work/bewi/ngs/databases/cellranger/refdata-cellranger-hg19-1.2.0",
@@ -13,8 +13,8 @@
 	"splat_simulate":{
         "de_prob": 0.1,
         "de_scale_factor": 0.3,
-       	"_de_loc_factor": [1],
-    	"de_loc_factor": [
+       	"de_loc_factor": [1],
+    	"_de_loc_factor": [
             0.5,
             0.75,
             1,
@@ -24,18 +24,7 @@
             2.5
         ],
         "de_dr_prob": 0.5,
-        "group_prob": [
-            0.25,
-            0.12,
-            0.09,
-            0.02,
-            0.07,
-            0.15,
-	    0.20,
-	    0.04,
-	    0.06
-
-        ],
+        "group_sizes": 9,
         "dropout_present": true
 	},
     "preprocess": 

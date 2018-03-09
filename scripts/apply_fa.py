@@ -19,6 +19,6 @@ def apply_fa(input_file, output_file, n_components, threads):
     fa.log_normalize()
     fa.apply()
 
-    fa.write_csv(output_file)
+    fa.write_csv(output_file, dim_red_res=True)
 
 apply_fa(args.input_file, args.output_file, args.n_components, args.n_threads)

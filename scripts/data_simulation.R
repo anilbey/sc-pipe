@@ -3,20 +3,22 @@ suppressMessages(library(rhdf5))
 library(argparse)
 
 parser <- ArgumentParser(description= 'simulates data')
-parser$add_argument('--input', required=TRUE)
+parser$add_argument('--input', help= 'rda input containing the estimated parameters' , required=TRUE)
 parser$add_argument('--group_prob', type='double', nargs='*', required=TRUE)
 parser$add_argument('--dropout_present', type='logical', required=TRUE)
 parser$add_argument('--output', required=TRUE)
 parser$add_argument('--loc', required=TRUE, type='double')
+parser$add_argument('--de_prob', required=TRUE, type='double')
 args = parser$parse_args()
 
 print('dropout present value:')
 print(args$dropout_present)
 
-splat_simulate = function(data, facLoc=1, facScale=0.3, deProb=0.1, dropoutPresent=FALSE, groupProb=c(0.33,0.33,0.34))
+splat_simulate = function(input_rda, facLoc=1, facScale=0.3, deProb=0.1, dropoutPresent=FALSE, groupProb=c(0.33,0.33,0.34))
 {
    # Estimate parameters from the data (it takes time, could be moved out of the function)
-    params = splatEstimate(data)
+    # loads the params object from the rda
+    load(input_rda)
     params = setParam(params, "group.prob", groupProb)
     params = setParam(params, "de.facScale", facScale)
     params = setParam(params, "de.prob", deProb)
@@ -55,7 +57,7 @@ write_hdf5 = function(sg, f_name)
 
 }
 
-data_simulation = function (input_file, output_file, group_prob, dropout_present,  loc_factor)
+data_simulation = function (input_rda, output_file, group_prob, dropout_present,  loc_factor, de_prob)
 {
     # R uses column-major order therefore the HDF5 matrix is transposed
     # automatically. Python and hdf5 use row-major order
@@ -63,14 +65,11 @@ data_simulation = function (input_file, output_file, group_prob, dropout_present
     # loc_factor is a string since we read it from the wildcards!
     loc_factor = as.numeric(loc_factor)
 
-    h5f = H5Fopen(input_file)
-    data = h5f$matrix
-    H5Fclose(h5f)
     print('*******shape of the matrix****')
     print(dim(data))
-    sg = splat_simulate(data = data, groupProb = group_prob, dropoutPresent=dropout_present,  facLoc = loc_factor)
+    sg = splat_simulate(input_rda = input_rda, groupProb = group_prob, dropoutPresent=dropout_present,  facLoc = loc_factor deProb=de_prob)
     write_hdf5(sg, output_file)
 
 }
 
-data_simulation(args$input, args$output, args$group_prob, args$dropout_present,  args$loc)
+data_simulation(args$input, args$output, args$group_prob, args$dropout_present,  args$loc, args$de_prob)
