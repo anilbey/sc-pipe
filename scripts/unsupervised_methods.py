@@ -165,10 +165,10 @@ class Silhouette(UnsupervisedMethod):
         return cls(model, k_min, k_max, metric)
 
     def apply(self):
-        
+        # TODO use generative object and np.fromiter here!!! for memory efficiency
         k_range = range(self.k_min, self.k_max)
         if isinstance(self.model, Simlr):
-            predicted_labels =  [KMeans().fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix)) for k in k_range]
+            predicted_labels =  [KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix)) for k in k_range]
         else:
             predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
 

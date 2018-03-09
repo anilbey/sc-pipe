@@ -14,7 +14,7 @@ args = parser$parse_args()
 print('dropout present value:')
 print(args$dropout_present)
 
-splat_simulate = function(input_rda, facLoc=1, facScale=0.3, deProb=0.1, dropoutPresent=FALSE, groupProb=c(0.33,0.33,0.34))
+splat_simulate = function(input_rda, facLoc=1, facScale=0.3, deProb=0.1, dropoutPresent=FALSE, groupProb)
 {
    # Estimate parameters from the data (it takes time, could be moved out of the function)
     # loads the params object from the rda
@@ -65,9 +65,7 @@ data_simulation = function (input_rda, output_file, group_prob, dropout_present,
     # loc_factor is a string since we read it from the wildcards!
     loc_factor = as.numeric(loc_factor)
 
-    print('*******shape of the matrix****')
-    print(dim(data))
-    sg = splat_simulate(input_rda = input_rda, groupProb = group_prob, dropoutPresent=dropout_present,  facLoc = loc_factor deProb=de_prob)
+    sg = splat_simulate(input_rda = input_rda, groupProb = group_prob, dropoutPresent=dropout_present,  facLoc = loc_factor, deProb=de_prob)
     write_hdf5(sg, output_file)
 
 }

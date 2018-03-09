@@ -18,7 +18,7 @@ rules
 
 def dirichlet_group_prob(size):
     dirr =  np.random.dirichlet(np.ones(size))
-    return dirr
+    return dirr.tolist()
 
 
 def get_all_fastqs(path):
