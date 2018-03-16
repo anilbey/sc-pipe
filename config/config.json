@@ -1,6 +1,6 @@
 {
     "real_data_output": "analysis_output",
-    "simulated_data_output": "simulated/9_groups_09.03.2018",
+    "simulated_data_output": "simulated/9_groups_16.03.2018",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
     "reference_transcriptome": "/cluster/work/bewi/ngs/databases/cellranger/refdata-cellranger-hg19-1.2.0",

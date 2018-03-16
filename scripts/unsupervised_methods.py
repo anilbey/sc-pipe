@@ -166,14 +166,15 @@ class Silhouette(UnsupervisedMethod):
         return cls(model, k_min, k_max, metric)
 
     def apply(self):
-        # TODO use generative object and np.fromiter here!!! for memory efficiency
         k_range = range(self.k_min, self.k_max)
         if isinstance(self.model, Simlr):
-            predicted_labels =  [KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix)) for k in k_range]
+        # uses generative object and np.fromiter for memory efficiency
+            go = (ss(X=self.matrix, labels=KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix))) for k in k_range)
+            silhouette_scores = np.fromiter(go, dtype=float, count=len(k_range))
         else:
             predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
-
-        silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in predicted_labels]
+            silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in predicted_labels]
+        
         max_index = np.argmax(silhouette_scores)
         self.results = predicted_labels[max_index]
 
