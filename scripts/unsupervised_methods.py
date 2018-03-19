@@ -28,6 +28,7 @@ class UnsupervisedMethod(metaclass=ABCMeta):
         h5f = h5py.File(input_file, 'r')
         self.matrix = h5f['matrix'].value
         barcodes = h5f['cell_attrs']['cell_names'].value
+        # decoder is needed since the input is a binary string
         decoder = np.vectorize(lambda t: t.decode('UTF-8'))
         self.barcodes = decoder(barcodes)
         h5f.close()
@@ -165,14 +166,15 @@ class Silhouette(UnsupervisedMethod):
         return cls(model, k_min, k_max, metric)
 
     def apply(self):
-        
         k_range = range(self.k_min, self.k_max)
         if isinstance(self.model, Simlr):
-            predicted_labels =  [KMeans().fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix)) for k in k_range]
+        # uses generative object and np.fromiter for memory efficiency
+            go = (ss(X=self.matrix, labels=KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix))) for k in k_range)
+            silhouette_scores = np.fromiter(go, dtype=float, count=len(k_range))
         else:
             predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
-
-        silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in predicted_labels]
+            silhouette_scores = [silhouette_score(X=self.matrix, labels=obj, metric=self.metric) for obj in predicted_labels]
+        
         max_index = np.argmax(silhouette_scores)
         self.results = predicted_labels[max_index]
 

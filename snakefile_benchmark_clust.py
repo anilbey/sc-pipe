@@ -17,8 +17,15 @@ rules
 '''
 
 def dirichlet_group_prob(size):
-    dirr =  np.random.dirichlet(np.ones(size))
-    return dirr
+    res = None
+    while True:
+        dirr = np.random.dirichlet(np.ones(size)*10, size=1)
+        if np.sum(dirr)==1:
+            res = dirr
+            break
+        else:
+            continue
+    return res.tolist()
 
 
 def get_all_fastqs(path):
@@ -82,7 +89,7 @@ rule estimate_params:
     input:
         sample_hdf5 = rules.create_hdf5.output
     output:
-        SIMULATED_DATA_OUTPUT+'/{sample}_estimated.rda'
+        HDF5_OUTPUT+'/{sample}_estimated.rda'
     log:
         out = LOG_FILES+'/estimate_params/sample_{sample}.out',
         err = LOG_FILES+'/estimate_params/sample_{sample}.err'
