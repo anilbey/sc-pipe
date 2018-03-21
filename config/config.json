@@ -1,6 +1,6 @@
 {
     "real_data_output": "analysis_output",
-    "simulated_data_output": "simulated/9_groups_16.03.2018",
+    "simulated_data_output": "simulated/5_groups_21.03.2018",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
     "reference_transcriptome": "/cluster/work/bewi/ngs/databases/cellranger/refdata-cellranger-hg19-1.2.0",
@@ -28,7 +28,7 @@
             2.5
         ],
         "de_dr_prob": 0.5,
-        "group_sizes": 9,
+        "group_sizes": 5,
         "dropout_present": true
 	},
     "preprocess": 
@@ -41,8 +41,7 @@
     "clustering":{
         "methods_used":[
             "phenograph",
-            "griph",
-            "simlr"
+            "griph"
         ],
         "phenograph":{
             "n_neighbours" : 100,

@@ -21,7 +21,7 @@ def dirichlet_group_prob(size):
     while True:
         dirr = np.random.dirichlet(np.ones(size)*10, size=1)
         if np.sum(dirr)==1:
-            res = dirr
+            res = dirr.flatten()
             break
         else:
             continue
@@ -42,7 +42,6 @@ rule all:
     shell:
         'echo test rule all {input}'
 
-#rule fastqc:
 
 # run it for each library them perform aggr
 # TODO: use wildcard {sample}, unique_run_id must come from {sample}
@@ -78,7 +77,7 @@ rule create_hdf5:
         #barcodes_file = rules.cellranger_count.output.barcodes_file
         barcodes_file = CELL_RANGER_OUTPUT_PATH+'/'+RUN_ID+'/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
-        HDF5_OUTPUT+'/{sample}.h5'
+        HDF5_OUTPUT+'/raw_{sample}.h5'
     log:
         out = LOG_FILES+'/create_hdf5/sample_{sample}.out',
         err = LOG_FILES+'/create_hdf5/sample_{sample}.err'

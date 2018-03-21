@@ -169,7 +169,7 @@ class Silhouette(UnsupervisedMethod):
         k_range = range(self.k_min, self.k_max)
         if isinstance(self.model, Simlr):
         # uses generative object and np.fromiter for memory efficiency
-            go = (ss(X=self.matrix, labels=KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix))) for k in k_range)
+            go = (silhouette_score(X=self.matrix, labels=KMeans(k).fit_predict(self.model.set_params(n_clusters=k).fit_predict(self.matrix))) for k in k_range)
             silhouette_scores = np.fromiter(go, dtype=float, count=len(k_range))
         else:
             predicted_labels = [self.model.set_params(n_clusters=k).fit_predict(self.matrix) for k in k_range]
