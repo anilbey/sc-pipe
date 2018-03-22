@@ -57,9 +57,21 @@ rule create_hdf5:
     shell:
         'python scripts/create_hdf5.py -g {input.genes_file} -m {input.matrix_file} -b {input.barcodes_file} -o {output} 2> {log.err} 1> {log.out} '
 
+rule filter_out_noncoding:
+    input:
+        HDF5_OUTPUT+'/raw_{sample}.h5'
+    output:
+        HDF5_OUTPUT+'/coding_region_only_{sample}.h5'
+    log:
+        out = LOG_FILES+'/filter_out_noncoding/sample_{sample}.out',
+        err = LOG_FILES+'/filter_out_noncoding/sample_{sample}.err'
+    shell:
+        'Rscript scripts/select_protein_coding_genes.R --input {input} --output {output} 2> {log.err} 1> {log.out} '
+    
+
 rule preprocess_zheng17:
     input:
-        hdf5_file = rules.create_hdf5.output
+        hdf5_file = HDF5_OUTPUT+'/coding_region_only_{sample}.h5'
     params:
         n_top_genes = config['preprocess']['zheng17']['n_top_genes']
     output:

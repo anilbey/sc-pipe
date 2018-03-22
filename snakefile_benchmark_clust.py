@@ -20,11 +20,12 @@ def dirichlet_group_prob(size):
     res = None
     while True:
         dirr = np.random.dirichlet(np.ones(size)*10, size=1)
-        if np.sum(dirr)==1:
+        if np.sum(dirr)==1.0:
             res = dirr.flatten()
             break
         else:
             continue
+    assert np.sum(res)==1.0
     return res.tolist()
 
 
