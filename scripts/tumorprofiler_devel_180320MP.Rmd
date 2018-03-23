@@ -1,0 +1,337 @@
+---
+title: "Tumor Profiler Quality Control Report"
+author: "Michael Prummer"
+date: "23 March 2018"
+output:
+  pdf_document: default
+  html_document: default
+  word_document:
+    fig_caption: yes
+    reference_docx: mystyles.docx
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, error=F, message=F, warning=F, cache=T, results='hide', fig.show = "hide")
+```
+
+```{r init}
+#####################################################################################
+## USER INPUT REQUIRED
+#####################################################################################
+# project-specific definitions
+path = "./"
+dat.dir = "/Users/mtuncel/data/melanoma_output_nexus_08.03.2018/expression_matrix/"
+#ref.dir = "C:/Users/mprummer/polybox/Projects/roche/tumorprofiler/tirosh_schelker/"
+
+
+#################################################`####################################
+## NO USER INPUT REQUIRED
+#####################################################################################
+# load data description file
+data.desc.fn = list.files(path, pattern="_data_description.tsv", full.names = T)[1]
+d.d = readLines(data.desc.fn)
+head.id = grep("head", d.d)
+nrow.dd = length(d.d)
+rm(d.d)
+# load sample description table
+d.head = read.table(data.desc.fn, sep="\t", head=F, skip=head.id, 
+                    nrows = nrow.dd - head.id, stringsAsFactors = F)
+d.head = d.head[,2:3]
+
+cnt.mean.cut = as.numeric(d.head$V3[grep("row-mean", d.head$V2)]) # average gene count cutoff
+lib.size.cut = as.numeric(d.head$V3[grep("library size per cell", d.head$V2)]) # library size cutoff
+nr.genes.cut = as.numeric(d.head$V3[grep("genes per cell", d.head$V2)]) # gene detection cutoff
+ref.gene.symbols = c("HIF1A", "CD44", "CXCR4", "CCR7", "TGFB1", "TGFB2", "VEGFA", "EGFR")
+ref.gene.ens = "" #c("ENSG00000000003", "ENSG00000000419", "ENSG00000000457")
+######################################################################################
+
+# packages
+lby = c("RColorBrewer", "ggplot2", "gplots", "cowplot", "pheatmap",
+        "reshape2", "knitr", "captioner", "dplyr", "tidyr", "broom", "biomaRt", 
+        "limma", "scater", "scran", "Rtsne", "org.Hs.eg.db")
+resp = lapply(lby, require, character.only=T, warn.conflicts=F, quietly=T, 
+              lib.loc=.libPaths()[1])
+if(!all(unlist(resp))) stop("Could not load one or more packages")
+rm(resp)
+
+# functions
+'%&%' = function(a,b) paste(a,b,sep="")
+tab_nums = captioner(prefix = "Table")
+fig_nums = captioner(prefix = "Figure")
+fcite = function(x,...) fig_nums(x, display="cite", ...)
+tcite = function(x,...) tab_nums(x, display="cite", ...)
+theme_set(theme_bw(12))
+fontsize = theme(axis.text=element_text(size=9), axis.title=element_text(size=11))
+```
+
+
+
+# Objectives 
+
+Automated outlier detection based on QC metrics. In addition, exclude cells and genes based on fixed thresholds.
+
+
+
+# Analysis plan 
+
+Single-cell RNA-seq data analysis will be performed following the published workflow [^scater] of the _R environment for statistical computing_[^biocref].
+
+[^scater]: A.T.L. Lun et al., A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor. _F1000Research_ *5*, 2122 (2016). doi: 10.12688/f1000research.9501.2, and D.J. McCarthy et al., Scater: pre-processing, quality control, normalization and visualization of single-cell RNA-seq data in R. _Bioinformatics_ *33*(8), 1179-1186 (2017). doi: 10.1093/bioinformatics/btw777.
+ 
+[^biocref]: W. Huber et al., Orchestrating high-throughput genomic analysis with Bioconductor. _Nat Methods_ *12*, 115-121 (2015). doi: 10.1038/nmeth.3252.
+
+
+## QC
+
+Cells with low total read counts (library size  < `r lib.size.cut`) or low number of detected genes ( < `r nr.genes.cut`) are excluded from further analysis. Similarly, genes with low detection rate are excluded (average counts over all cells < `r cnt.mean.cut`).
+
+Possible cell cycle effects are identified and accounted for.
+
+
+
+# Data description
+
+
+```{r loadmeta}
+meta = read.table(dat.dir %&% "cell_attrs.csv", sep=",", head=T)
+meta$sample = "C" %&% meta$X
+meta$sample = factor(meta$sample, levels = unique(meta$sample))
+rownames(meta) = meta$barcodes  
+names(meta)
+summary(meta)
+str(meta)
+```
+
+```{r}
+tab_nums(name = "meta_descr", caption = "Description of meta data table.")
+```
+
+A summary of the sample meta data is shown in `r tcite("meta_descr")`. 
+
+```{r load_meta, results='asis'}
+tab = matrix(NA, nrow=ncol(meta), ncol=2)
+tab[,1] = names(meta)
+tab[,2] = as.character(apply(apply(meta,2,function(x) sort(unique(x))), 2,
+                              function(x) paste(x, collapse=", ")))
+tt = substr(tab[,2],1,50)
+tt[which(tt != tab[,2])] = tt[which(tt != tab[,2])] %&% ", ..."
+tab[,2] = tt 
+
+colnames(tab) = c("column name", "possible values")
+kable(tab, rownames=F, caption = tab_nums("meta_descr"))
+```
+
+```{r load_dat}
+dat.fn = dat.dir %&% "expression_matrix.csv"
+if(file.exists(dat.fn)){
+  din = read.table(dat.fn, sep=",", head=T, stringsAsFactors = F)
+} else {
+  stop("File not found.")  
+}
+dat = t(as.matrix(din[,-1]))
+colnames(dat) = din[,1]
+rownames(dat) = names(din)[-1]
+rm(din)
+str(dat)
+dat[1:5,1:5]
+dat = dat[which(substr(rownames(dat),1,3) == "ENS"),]
+rownames(dat) = gsub("(ENS.*)\\..*","\\1",rownames(dat))
+#colnames(dat) = meta$sample[match(colnames(dat), meta$barcodes)]
+str(dat)
+```
+
+
+
+```{r}
+# annnotate protein coding transcripts (genes)
+t.rows = nrow(dat)
+t.d = select(org.Hs.eg.db, key=rownames(dat), keytype = "ENSEMBL", 
+             columns = c("SYMBOL", "GENENAME", "ENTREZID"))
+t.d = t.d[!duplicated(t.d$ENSEMBL),] # uses first element for duplicated entries
+idx = which(!duplicated(t.d$SYMBOL) & !is.na(t.d$SYMBOL))
+t.d = t.d[idx,]
+dat = dat[idx,]
+```
+
+
+The count table contains single-cell mRNA read counts of `r t.rows` genes of which `r round(100*length(idx)/nrow(dat))` % could be mapped to ENTREZIDs.
+
+
+# Quality control on the cells and genes
+
+
+
+```{r build_SCESet}
+rownames(dat) = t.d$SYMBOL
+rownames(t.d) = t.d$SYMBOL
+sce = SingleCellExperiment(assays=list(counts=dat), colData = meta, rowData = t.d)
+rm(t.d)
+sizeFactors(sce) = colSums(assay(sce))
+sce
+ave.counts = rowMeans(counts(sce))
+keep_feature = (ave.counts > cnt.mean.cut)
+#keep_feature = rowSums(counts(sce)) > 0
+# remove low-count genes
+sce = calculateQCMetrics(sce[keep_feature,])
+sce = normalize(sce)
+plotExpression(sce, rowData(sce)$SYMBOL[1:6], x = "sample", exprs_values = "logcounts", alpha=0.5)
+#plotQC(sce, type = "exprs-freq-vs-mean")
+#plotScater(sce)
+```
+
+
+```{r}
+fig_nums(name = "filter", caption = "Distribution of average gene count (left), library size (middle) and number of detected genes (right). The lines indicate the manual filter thresholds.")
+```
+
+```{r filter, fig.show="asis", fig.width=10, fig.height=5, fig.cap=fig_nums("filter")}
+par(mfrow=c(1,3))
+hist(rowData(sce)$log10_mean_counts, main="", xlab=expression(Log[10]~"average count"), 
+     breaks=100, col="grey80", ylab="Number of genes")
+abline(v=log10(cnt.mean.cut+1), col="blue", lwd=2, lty=2)
+hist(sce$log10_total_counts, xlab="Library sizes (log10)", main="",
+     breaks=20, col="grey80", ylab="Number of cells")
+abline(v=log10(lib.size.cut), col="blue", lwd=2, lty=2)
+hist(sce$total_features, xlab="Number of expressed genes", main="",
+     breaks=20, col="grey80", ylab="Number of cells")
+abline(v=nr.genes.cut, col="blue", lwd=2, lty=2)
+par(mfrow=c(1,1))
+```
+
+
+```{r}
+tab_nums(name = "genefilter", caption = "Genes with consistently low counts are excluded.")
+```
+
+```{r genefilter, results="asis"}
+tab = as.matrix(table(keep_feature))
+dimnames(tab) = list(c("Mean counts < " %&% cnt.mean.cut, 
+                       "Mean counts > " %&% cnt.mean.cut), 
+                     c("Nr of genes"))
+kable(tab, caption = tab_nums("genefilter"))
+```
+
+
+
+```{r cell_outlier}
+libsize.keep = !isOutlier(sce$total_counts, nmads=3, type="lower", log=TRUE)
+feature.keep = !isOutlier(sce$total_features, nmads=3, type="lower", log=TRUE)
+libsize.cut = min(sce$total_counts[libsize.keep])
+feature.cut = min(sce$total_features[feature.keep])
+sce$filter_auto = feature.keep * libsize.keep
+libsize.keep = factor(libsize.keep, levels = c("FALSE", "TRUE"))
+feature.keep = factor(feature.keep, levels = c("FALSE", "TRUE"))
+tab = table(libsize.keep, feature.keep)
+dimnames(tab) = list(c("Library size < " %&% libsize.cut, 
+                       "Library size > " %&% libsize.cut),
+                     c("Nr genes < " %&% feature.cut, 
+                       "Nr genes > " %&% feature.cut))
+tab = addmargins(tab, FUN = list(Total = sum), quiet = TRUE)
+```
+
+
+```{r}
+tab_nums(name = "autofilter", caption = "Number of cells in the different filter categories. The thresholds are determined by automatic outlier detection. Cells are excluded if they lie outside three MADs of all cells in a cluster.")
+fig_nums(name = "filter2", caption = "PCA plot of QC-metrices (A) and scatter plot of library size vs number of detected genes (B).")
+```
+
+
+```{r filter2, results="asis", fig.show="asis", fig.width=10, fig.height=5, fig.cap=fig_nums("filter2")}
+kable(tab, caption = tab_nums("autofilter"))
+# p1 = plotPCA(sce, colour_by = "log10_total_counts" ) + fontsize
+
+pca = prcomp(colData(sce)[,4:11], scale. = T, center = T)
+pca = data.frame(pca$x)[,1:2]
+pca$log10_total_features = colData(sce)$log10_total_features
+p1 = ggplot(pca, aes(x=PC1, y=PC2, color=log10_total_features)) + fontsize + 
+  geom_point() + scale_color_distiller(palette="YlOrBr") + ggtitle("QC-PCA")
+
+p2 = ggplot(as.data.frame(colData(sce)), aes(x=log10_total_features, y=log10_total_counts, 
+                                             color=pct_counts_top_50_features)) + 
+  geom_point() + scale_color_distiller(palette="YlGnBu") + fontsize + 
+  geom_hline(yintercept = log10(libsize.cut+1), color="seagreen", size=1.5, linetype="dashed") +
+  geom_vline(xintercept = log10(feature.cut+1), color="seagreen", size=1.5, linetype="dashed")
+
+plot_grid(p1, p2, nrow = 1, labels = c("A", "B"))
+```
+
+
+
+```{r}
+tab_nums(name = "filter_fix", caption = "Number of cells in the different filter categories. The thresholds were chosen manually.")
+```
+
+```{r cell_filter_fix, results="asis"}
+libsize.keep = (sce$total_counts > lib.size.cut)
+feature.keep = (sce$total_features > nr.genes.cut)
+sce$filter_fix = feature.keep * libsize.keep
+libsize.keep = factor(libsize.keep, levels = c("FALSE", "TRUE"))
+feature.keep = factor(feature.keep, levels = c("FALSE", "TRUE"))
+tab = table(libsize.keep, feature.keep)
+dimnames(tab) = list(c("Library size < " %&% lib.size.cut, 
+                       "Library size > " %&% lib.size.cut),
+                     c("Nr genes < " %&% nr.genes.cut, 
+                       "Nr genes > " %&% nr.genes.cut))
+tab = addmargins(tab, FUN = list(Total = sum), quiet = TRUE)
+kable(tab, caption = tab_nums("filter_fix"))
+```
+
+
+```{r}
+tab_nums(name = "filter_combi", caption = "Effect of filtering out cells based on both criteria.")
+```
+
+```{r combi_filter, results="asis"}
+kable(tab, caption = tab_nums("filter_fix"))
+auto.keep = factor(sce$filter_auto==1, levels = c("FALSE", "TRUE"))
+fix.keep = factor(sce$filter_fix==1, levels = c("FALSE", "TRUE"))
+
+tab = table(auto.keep,fix.keep)
+dimnames(tab) = list(c("Auto drop", "Auto keep"),
+                     c("Fix drop", "Fix keep"))
+tab = addmargins(tab, FUN = list(Total = sum), quiet = TRUE)
+kable(tab, caption = tab_nums("filter_combi"))
+```
+
+```{r}
+sce = sce[ , sce$filter_auto==1]
+sce = sce[ , sce$filter_fix==1]
+```
+
+As part of the quality control steps, cells with low library size and few counted genes are excluded from further analysis.
+
+
+
+## Classification of cell cycle phase
+
+Using the described prediction method [^cycle] and a pre-trained set of marker pairs for mouse, cells are classified into cell cycle phases based on gene expression data.
+
+[^cycle]: A. Scialdone et al., Computational assignment of cell-cycle stage from single-cell transcriptome data. _Methods_ *85*, 54 (2015). doi: 10.1016/j.ymeth.2015.06.021.
+
+
+```{r}
+tab_nums(name = "cellcycle", caption = "Estimated distribution of cells among cell cycle states.")
+fig_nums(name = "cellcycle", caption = "Estimated distribution of cells among cell cycle states.")
+```
+
+```{r cellcycle, results="asis", fig.show="asis", fig.width=10, fig.height=5, fig.cap=fig_nums("cellcycle"), eval=F}
+hs.pairs <- readRDS(system.file("exdata", "human_cycle_markers.rds", package="scran"))
+anno <- select(org.Hs.eg.db, keys=rownames(sce), keytype="SYMBOL", column="ENSEMBL")
+ensembl <- anno$ENSEMBL[match(rownames(sce), anno$SYMBOL)]
+assignments <- cyclone(sce, hs.pairs, gene.names=ensembl)
+sce$cellcycle = assignments$phases
+sce$cc.scores = assignments$scores
+ggplot(sce$cc.scores, aes(x=G1, y=G2M, color=sce$cellcycle)) + geom_jitter() 
+tab = table(sce$cellcycle, useNA="ifany")
+tab = addmargins(tab, FUN=list("Total"=sum))
+kable(t(tab), caption=tab_nums("cellcycle"))
+#sce = sce[,which(assignments$phases=="G1")]
+```
+
+
+```{r save}
+write.table(colData(sce), file = dat.dir %&% "cell_attr_qc.csv", sep=",")
+write.table(rowData(sce), file = dat.dir %&% "gene_attr_qc.csv", sep=",")
+write.table(assay(sce), file = dat.dir %&% "expression_matrix_qc.csv", sep=",")
+```
+
