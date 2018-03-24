@@ -1,0 +1,17 @@
+3k PBMCs from a Healthy Donor
+Single Cell Gene Expression Dataset by Cell Ranger 1.1.0
+
+Peripheral blood mononuclear cells (PBMCs) from a healthy donor (same donor as pbmc6k).
+
+PBMCs are primary cells with relatively small amounts of RNA (~1pg RNA/cell).
+
+    2,700 cells detected
+    Sequenced on Illumina NextSeq 500 with ~69,000 reads per cell
+    98bp read1 (transcript), 8bp I5 sample barcode, 14bp I7 GemCode barcode and 10bp read2 (UMI)
+    Analysis run with --cells=3000
+
+Transcriptome: hg19
+
+References
+1) https://support.10xgenomics.com/single-cell-gene-expression/datasets/1.1.0/pbmc3k
+2) http://cf.10xgenomics.com/samples/cell-exp/1.1.0/pbmc3k/pbmc3k_web_summary.html
