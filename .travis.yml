@@ -30,3 +30,6 @@ install:
 
 script:
 - pytest $TESTS_DIR
+
+notifications:
+  email: false
