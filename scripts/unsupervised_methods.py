@@ -1,15 +1,16 @@
 from abc import ABCMeta, abstractmethod
-from sklearn.cluster import KMeans, AgglomerativeClustering
-from sklearn.decomposition import PCA
-from sklearn.manifold import TSNE
-from sklearn.decomposition import FactorAnalysis as sk_fa
 import h5py
-from ZIFA import ZIFA, block_ZIFA
 import numpy as np
 import pandas as pd
+from sklearn.metrics.cluster import silhouette_score
+from sklearn.cluster import KMeans, AgglomerativeClustering
+from sklearn.decomposition import PCA
+
+from sklearn.manifold import TSNE
+from sklearn.decomposition import FactorAnalysis as sk_fa
+from ZIFA import ZIFA, block_ZIFA
 import SIMLR
 import phenograph
-from sklearn.metrics.cluster import silhouette_score
 
 class UnsupervisedMethod(metaclass=ABCMeta):
 
@@ -73,7 +74,7 @@ class Tsne(UnsupervisedMethod):
         self.results = tsne.fit_transform(self.matrix)
 
 class FactorAnalysis(UnsupervisedMethod):
-
+    
     def __init__(self, n_components):
         UnsupervisedMethod.__init__(self)
         self.n_components = n_components
@@ -83,7 +84,7 @@ class FactorAnalysis(UnsupervisedMethod):
         self.results = fa.fit_transform(self.matrix)
 
 class Zifa(UnsupervisedMethod):
-
+    
     def __init__(self, n_components, n_blocks):
         UnsupervisedMethod.__init__(self)
         self.n_components = n_components
