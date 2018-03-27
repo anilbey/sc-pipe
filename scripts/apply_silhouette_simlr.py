@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Silhouette
+from unsupervised.silhouette import Silhouette
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--input", required=True)
@@ -27,5 +27,3 @@ def apply_silhouette_simlr(input_file, output_file, n_components, pca_components
 
 
 apply_silhouette_simlr(args.input, args.output, args.n_components, args.pca_components, args.n_neighbours, args.max_iter, args.k_min, args.k_max, args.metric, args.n_threads)
-
-

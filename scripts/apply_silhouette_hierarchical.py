@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Silhouette
+from unsupervised.silhouette import Silhouette
 
 parser = argparse.ArgumentParser()
 

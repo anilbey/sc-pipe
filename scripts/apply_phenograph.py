@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Phenograph
+from unsupervised.phenograph import Phenograph
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")
@@ -13,7 +13,7 @@ args = parser.parse_args()
 
 
 def apply_pheno(input_file, output_file, n_neighbours, threads):
-    
+
     pheno = Phenograph(n_neighbours, threads)
     pheno.load_from_hdf5(input_file)
     pheno.log_normalize()

@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Zifa
+from unsupervised.zifa import Zifa
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")
@@ -12,7 +12,7 @@ args = parser.parse_args()
 
 
 def apply_zifa(input_file, output_file, n_components, n_blocks):
-    
+
     zifa = Zifa(n_components, n_blocks)
     zifa.load_from_hdf5(input_file)
     zifa.log_normalize()

@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import FactorAnalysis
+from unsupervised.factoranalysis import FactorAnalysis
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")

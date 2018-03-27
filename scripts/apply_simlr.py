@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Simlr
+from unsupervised.simlr import Simlr
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")
@@ -14,7 +14,7 @@ args = parser.parse_args()
 
 #  https://github.com/anilbey/SIMLR_PY simlr version is used here to support multi-threading
 def apply_simlr(input_file, output_file, n_components, pca_components, n_neighbours, max_iter, threads):
-    
+
     simlr = Simlr(n_components, pca_components, n_neighbours, max_iter, threads)
     simlr.load_from_hdf5(input_file)
     simlr.log_normalize()
@@ -23,5 +23,3 @@ def apply_simlr(input_file, output_file, n_components, pca_components, n_neighbo
     simlr.write_csv(output_file)
 
 apply_simlr(args.input_file, args.output_file, args.n_components, args.pca_components, args.n_neighbours, args.max_iter, args.n_threads)
-
-    
