@@ -1,6 +1,6 @@
 {
     "real_data_output": "analysis_output",
-    "simulated_data_output": "simulated/15_groups_21.03.2018",
+    "simulated_data_output": "simulated/9_groups_21.03.2018",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
     "cell_ranger_filtered_matrix_path": "/Users/mtuncel/sc-pipe/data/pbmc3k",
