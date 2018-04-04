@@ -12,6 +12,10 @@ CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 T_CODE = config['transcriptome_code']
 RUN_ID = config['unique_run_id']
 #ruleorder: simulate_data  > preprocess_zheng17
+
+dim_red_methods_with_fixed_params = config['dim_reduction']['methods_used']
+dim_red_methods_with_fixed_params.remove('pca')
+
 '''
 rules
 '''
@@ -35,10 +39,16 @@ def get_all_fastqs(path):
 rule all:
     input:
         direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv',de_prob= config['splat_simulate']['de_prob'], \
-        loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
+                loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
 #        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
-        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob= config['splat_simulate']['de_prob'], \
-        loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
+        
+        pca_variations =expand(ANALYSIS_OUTPUT+'/silhouette-pca_{pca_comps}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv',de_prob=config['splat_simulate']['de_prob'], \
+        loc=config['splat_simulate']['de_loc_factor'], pca_comps=config['dim_reduction']['pca']['n_components'],c_method=config['dim_reduction']['clustering_methods'],sample=SAMPLE),
+
+        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob=config['splat_simulate']['de_prob'], \ 
+        loc=config['splat_simulate']['de_loc_factor'], method=dim_red_methods_with_fixed_params, c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
+
+
 #TODO input function        fastqs = get_all_fastqs(config['input_fastqs'])
     shell:
         'echo test rule all {input}'
@@ -87,7 +97,7 @@ rule create_hdf5:
 
 rule estimate_params:
     input:
-        sample_hdf5 = rules.create_hdf5.output
+        sample_hdf5 = HDF5_OUTPUT+'/raw_{sample}.h5'
     output:
         HDF5_OUTPUT+'/{sample}_estimated.rda'
     log:
@@ -101,7 +111,7 @@ rule simulate_data:
     group_prob can be a list
     '''
     input:
-        sample_hdf5 = rules.estimate_params.output
+        sample_hdf5 = ancient(rules.estimate_params.output)
     params:
         group_prob = dirichlet_group_prob(config['splat_simulate']['group_sizes']),
         dropout_present = config['splat_simulate']['dropout_present']
@@ -176,14 +186,15 @@ rule pca:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_de{de_prob}_loc{loc}_zheng17.h5'
     params:
-        n_components = config['dim_reduction']['pca']['n_components']
+        # this information is already contained in the wildcard
+        # n_components = config['dim_reduction']['pca']['n_components']
     output:
-        ANALYSIS_OUTPUT+'/pca/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv'
+        ANALYSIS_OUTPUT+'/pca_{pca_comps}/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv'
     log:
         out = LOG_FILES+'/pca/sample_{sample}_de{de_prob}loc_{loc}.out',
         err = LOG_FILES+'/pca/sample_{sample}_de{de_prob}loc_{loc}.err'
     shell:
-        "python scripts/apply_pca.py {input} {output} {params.n_components} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_pca.py {input} {output} {wildcards.pca_comps} 2> {log.err} 1> {log.out}"
 
 rule simlr:
     input:

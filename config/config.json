@@ -83,7 +83,7 @@
 		    "block_zifa"
 		],
 		"pca":{
-			"n_components" : 5
+			"n_components" : [5, 15, 25, 50]
 		},
 		"block_zifa":{
 			"n_components" : 2,
