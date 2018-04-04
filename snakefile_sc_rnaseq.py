@@ -8,6 +8,7 @@ T_CODE = config['transcriptome_code'] # e.g. hg19
 ANALYSIS_OUTPUT = config['real_data_output']
 LOG_FILES = ANALYSIS_OUTPUT+'/log'
 CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
+FILTERED_GENE_BARCODE_PATH = config['cell_ranger_filtered_matrix_path']
 HDF5_OUTPUT = 'hdf5_data'
 RUN_ID = config['unique_run_id']
 
@@ -44,11 +45,11 @@ rule cellranger_count: # (parallel)
 rule create_hdf5:
     input:
         #genes_file = rules.cellranger_count.output.genes_file,
-        genes_file = CELL_RANGER_OUTPUT_PATH+'/20150306_22_27/outs/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
+        genes_file = FILTERED_GENE_BARCODE_PATH+'/filtered_gene_bc_matrices/'+T_CODE+'/genes.tsv',
         #matrix_file = rules.cellranger_count.output.matrix_file,
-        matrix_file = CELL_RANGER_OUTPUT_PATH+'/20150306_22_27/outs/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
+        matrix_file = FILTERED_GENE_BARCODE_PATH+'/filtered_gene_bc_matrices/'+T_CODE+'/matrix.mtx',
         #barcodes_file = rules.cellranger_count.output.barcodes_file
-        barcodes_file = CELL_RANGER_OUTPUT_PATH+'/20150306_22_27/outs/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
+        barcodes_file = FILTERED_GENE_BARCODE_PATH+'/filtered_gene_bc_matrices/'+T_CODE+'/barcodes.tsv'
     output:
         HDF5_OUTPUT+'/raw_{sample}.h5'
     log:

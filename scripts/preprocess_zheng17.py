@@ -27,7 +27,7 @@ def preprocess_zheng17(hdf5_file, out_path, n_top_genes):
     # mask2 to select the top 1000 genes
     mask2 = filter_result.gene_subset
     adata = adata[:, mask2]
-    sc.pp.normalize_per_cell(adata)  # need to redo normalization after filtering 
+    sc.pp.normalize_per_cell(adata)  # need to redo normalization after filtering
 
     # Writing the output hdf5 files
     matrix = adata.X

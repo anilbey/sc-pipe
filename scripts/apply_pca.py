@@ -1,5 +1,5 @@
 import argparse
-from unsupervised_methods import Pca
+from unsupervised.pca import Pca
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="input matrix hdf5 file")
