@@ -1,4 +1,5 @@
 from .unsupervised_method import UnsupervisedMethod
+from .simlr import Simlr
 from sklearn.metrics.cluster import silhouette_score
 from sklearn.cluster import KMeans, AgglomerativeClustering
 import numpy as np
