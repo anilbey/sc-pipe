@@ -3,7 +3,7 @@ import numpy as np
 
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']  #['hgmm100']
-HDF5_OUTPUT = 'hdf5_data'
+HDF5_OUTPUT = 'intermediate_files'
 SIMULATED_DATA_OUTPUT = config['simulated_data_output']
 ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
 LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'
@@ -41,11 +41,11 @@ rule all:
         direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv',de_prob= config['splat_simulate']['de_prob'], \
                 loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
 #        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
-        
+
         pca_variations =expand(ANALYSIS_OUTPUT+'/silhouette-pca_{pca_comps}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv',de_prob=config['splat_simulate']['de_prob'], \
         loc=config['splat_simulate']['de_loc_factor'], pca_comps=config['dim_reduction']['pca']['n_components'],c_method=config['dim_reduction']['clustering_methods'],sample=SAMPLE),
 
-        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob=config['splat_simulate']['de_prob'], \ 
+        dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob=config['splat_simulate']['de_prob'], \
         loc=config['splat_simulate']['de_loc_factor'], method=dim_red_methods_with_fixed_params, c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
 
 
