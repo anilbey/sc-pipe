@@ -1,5 +1,5 @@
 PBMC_PATH = 'data/pbmc68k/filtered_matrices_mex/hg19'
-HDF5_OUTPUT = 'hdf5_data'
+HDF5_OUTPUT = 'intermediate_files'
 configfile: 'config/config.json'
 SAMPLE = 'PBMC68k'
 ANALYSIS_OUTPUT = 'analysis/'+SAMPLE
@@ -35,12 +35,12 @@ rule cluster_results:
 
 rule preprocess_zheng17:
     input:
-        loom_file = HDF5_OUTPUT+'/'+SAMPLE+'.loom'	
+        loom_file = HDF5_OUTPUT+'/'+SAMPLE+'.loom'
     params:
         transpose = True
     output:
         HDF5_OUTPUT+'/'+SAMPLE+'_zheng17.loom'
-    script: 
+    script:
         "scripts/preprocess_zheng17.py"
 
 rule pca:
@@ -107,6 +107,3 @@ rule zifa:
         ANALYSIS_OUTPUT+'/block_zifa.csv'
     script:
         "scripts/zifa.py"
-
-
-

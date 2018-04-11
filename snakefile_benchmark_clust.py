@@ -3,7 +3,7 @@ import numpy as np
 
 configfile: 'config/config.json'
 SAMPLE = ['melanomaS2']  #['hgmm100']
-HDF5_OUTPUT = 'hdf5_data'
+HDF5_OUTPUT = 'intermediate_files'
 SIMULATED_DATA_OUTPUT = config['simulated_data_output']
 ANALYSIS_OUTPUT = SIMULATED_DATA_OUTPUT+'/analysis'
 LOG_FILES = SIMULATED_DATA_OUTPUT+'/log'

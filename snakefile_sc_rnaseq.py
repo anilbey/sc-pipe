@@ -9,7 +9,7 @@ ANALYSIS_OUTPUT = config['real_data_output']
 LOG_FILES = ANALYSIS_OUTPUT+'/log'
 CELL_RANGER_OUTPUT_PATH = config['cell_ranger_output']
 FILTERED_GENE_BARCODE_PATH = config['cell_ranger_filtered_matrix_path']
-HDF5_OUTPUT = 'hdf5_data'
+HDF5_OUTPUT = 'intermediate_files'
 RUN_ID = config['unique_run_id']
 
 
@@ -68,7 +68,7 @@ rule filter_out_noncoding:
         err = LOG_FILES+'/filter_out_noncoding/sample_{sample}.err'
     shell:
         'Rscript scripts/select_protein_coding_genes.R --input {input} --output {output} 2> {log.err} 1> {log.out} '
-    
+
 
 rule preprocess_zheng17:
     input:
