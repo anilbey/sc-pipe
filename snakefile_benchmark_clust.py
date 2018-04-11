@@ -16,6 +16,9 @@ RUN_ID = config['unique_run_id']
 dim_red_methods_with_fixed_params = config['dim_reduction']['methods_used']
 dim_red_methods_with_fixed_params.remove('pca')
 
+clustering_methods_with_fixed_params = config['clustering']['methods_used']
+clustering_methods_with_fixed_params.remove('phenograph')
+
 '''
 rules
 '''
@@ -39,14 +42,19 @@ def get_all_fastqs(path):
 rule all:
     input:
         direct_clustering_results = expand(ANALYSIS_OUTPUT+'/{method}/'+'clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv',de_prob= config['splat_simulate']['de_prob'], \
-                loc=config['splat_simulate']['de_loc_factor'], method=config['clustering']['methods_used'], sample=SAMPLE),
-#        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_loc{loc}.csv', loc=config['splat_simulate']['de_loc_factor'], method=config['dim_reduction']['methods_used'], sample=SAMPLE),
+                loc=config['splat_simulate']['de_loc_factor'], method=clustering_methods_with_fixed_params, sample=SAMPLE),
+
+        dim_red_results = expand(ANALYSIS_OUTPUT+'/{method}/{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob=config['splat_simulate']['de_prob'], \
+                loc=config['splat_simulate']['de_loc_factor'], method=dim_red_methods_with_fixed_params, sample=SAMPLE),
         
+        phenograph_variations = expand(ANALYSIS_OUTPUT+'/phenograph_{nn}/'+'clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv',de_prob= config['splat_simulate']['de_prob'], \
+                loc=config['splat_simulate']['de_loc_factor'], nn = config['clustering']['phenograph']['benchmark_n_neighbours'], sample=SAMPLE), 
+
         pca_variations =expand(ANALYSIS_OUTPUT+'/silhouette-pca_{pca_comps}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv',de_prob=config['splat_simulate']['de_prob'], \
-        loc=config['splat_simulate']['de_loc_factor'], pca_comps=config['dim_reduction']['pca']['n_components'],c_method=config['dim_reduction']['clustering_methods'],sample=SAMPLE),
+                loc=config['splat_simulate']['de_loc_factor'], pca_comps=config['dim_reduction']['pca']['benchmark_n_components'],c_method=config['dim_reduction']['clustering_methods'],sample=SAMPLE),
 
         dim_red_clustering_results = expand(ANALYSIS_OUTPUT+'/silhouette-{method}/'+'clusters/{c_method}_{sample}_sim_de{de_prob}_loc{loc}.csv', de_prob=config['splat_simulate']['de_prob'], \ 
-        loc=config['splat_simulate']['de_loc_factor'], method=dim_red_methods_with_fixed_params, c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
+                loc=config['splat_simulate']['de_loc_factor'], method=dim_red_methods_with_fixed_params, c_method=config['dim_reduction']['clustering_methods'], sample=SAMPLE)
 
 
 #TODO input function        fastqs = get_all_fastqs(config['input_fastqs'])
@@ -196,6 +204,20 @@ rule pca:
     shell:
         "python scripts/apply_pca.py {input} {output} {wildcards.pca_comps} 2> {log.err} 1> {log.out}"
 
+rule phenograph:
+    input:
+        SIMULATED_DATA_OUTPUT+'/{sample}_sim_de{de_prob}_loc{loc}_zheng17.h5'
+    params:
+        #n_neighbours = config['clustering']['phenograph']['n_neighbours']
+    output:
+        ANALYSIS_OUTPUT+'/phenograph_{nn}/clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv'
+    log:
+        out = LOG_FILES+'/phenograph/sample_{sample}_de{de_prob}loc_{loc}.out',
+        err = LOG_FILES+'/phenograph/sample_{sample}_de{de_prob}loc_{loc}.err'
+    threads: 8
+    shell:
+        "python scripts/apply_phenograph.py {input} {output} {wildcards.nn} --n_threads {threads} 2> {log.err} 1> {log.out}"
+
 rule simlr:
     input:
         SIMULATED_DATA_OUTPUT+'/{sample}_sim_de{de_prob}_loc{loc}_zheng17.h5'
@@ -244,20 +266,6 @@ rule tsne:
         err = LOG_FILES+'/tsne/sample_{sample}_de{de_prob}loc_{loc}.err'
     shell:
         "python scripts/apply_tsne.py {input} {output} {params.n_components} {params.init}  2> {log.err} 1> {log.out}"
-
-rule phenograph:
-    input:
-        SIMULATED_DATA_OUTPUT+'/{sample}_sim_de{de_prob}_loc{loc}_zheng17.h5'
-    params:
-        n_neighbours = config['clustering']['phenograph']['n_neighbours']
-    output:
-        ANALYSIS_OUTPUT+'/phenograph/clusters/{sample}_sim_de{de_prob}_loc'+'{loc}'+'.csv'
-    log:
-        out = LOG_FILES+'/phenograph/sample_{sample}_de{de_prob}loc_{loc}.out',
-        err = LOG_FILES+'/phenograph/sample_{sample}_de{de_prob}loc_{loc}.err'
-    threads: 8
-    shell:
-        "python scripts/apply_phenograph.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
 
 rule griph:
     input:

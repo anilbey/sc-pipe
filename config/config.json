@@ -1,6 +1,6 @@
 {
     "real_data_output": "analysis_output",
-    "simulated_data_output": "simulated/9_groups_21.03.2018",
+    "simulated_data_output": "simulated/15_groups_21.03.2018",
     "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
     "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
     "cell_ranger_filtered_matrix_path": "/Users/mtuncel/sc-pipe/data/pbmc3k",
@@ -45,7 +45,8 @@
             "griph"
         ],
         "phenograph":{
-            "n_neighbours" : 100,
+            "benchmark_n_neighbours" : [5,25, 50, 100, 125, 250],
+	    "n_neighbours": 100,
 	    "n_jobs" : 8
         },
 	"silhouette": 
@@ -84,7 +85,7 @@
 		    "block_zifa"
 		],
 		"pca":{
-			"n_components" : [5, 15, 25, 50]
+			"benchmark_n_components" : [5, 15, 25, 50]
 		},
 		"block_zifa":{
 			"n_components" : 2,
