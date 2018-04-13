@@ -27,7 +27,8 @@ install:
 - conda create -n testenv python=$TRAVIS_PYTHON_VERSION
 - source activate testenv
 - conda install -c conda-forge $CONDA_FORGE_DEPS
-- pip install pytest-ordering
+- pip install pytest-ordering scanpy
+- pip install git+https://github.com/jacoblevine/phenograph.git
 
 script:
 - pytest $TESTS_DIR
