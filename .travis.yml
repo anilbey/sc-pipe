@@ -27,6 +27,7 @@ install:
 - conda create -n testenv python=$TRAVIS_PYTHON_VERSION
 - source activate testenv
 - conda install -c conda-forge $CONDA_FORGE_DEPS
+- pip install pytest-ordering
 
 script:
 - pytest $TESTS_DIR
