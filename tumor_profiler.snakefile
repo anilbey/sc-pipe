@@ -1,6 +1,6 @@
 import datetime
 
-configfile: 'config/config.json'
+configfile: 'config/tumor_profiler_config.json'
 
 # global variables
 SAMPLE = ['melanomaS2']
@@ -70,7 +70,7 @@ rule filter_out_noncoding:
         'Rscript scripts/select_protein_coding_genes.R --input {input} --output {output} 2> {log.err} 1> {log.out} '
 
 
-rule preprocess_zheng17:
+rule preprocess:
     input:
         hdf5_file = HDF5_OUTPUT+'/coding_region_only_{sample}.h5'
     params:
@@ -78,14 +78,14 @@ rule preprocess_zheng17:
     output:
         HDF5_OUTPUT+'/zheng17_{sample}.h5'
     log:
-        out = LOG_FILES+'/preprocess_zheng17/sample_{sample}.out',
-        err = LOG_FILES+'/preprocess_zheng17/sample_{sample}.err'
+        out = LOG_FILES+'/preprocess/sample_{sample}.out',
+        err = LOG_FILES+'/preprocess/sample_{sample}.err'
     shell:
-        "python scripts/preprocess_zheng17.py -i {input.hdf5_file} -o {output} --n_top_genes {params.n_top_genes} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_preprocess.py -i {input.hdf5_file} -o {output} --n_top_genes {params.n_top_genes} 2> {log.err} 1> {log.out}"
 
 rule phenograph:
     input:
-        #rules.preprocess_zheng17.output
+        #rules.preprocess.output
         HDF5_OUTPUT+'/zheng17_{sample}.h5'
     params:
         n_neighbours = config['clustering']['phenograph']['n_neighbours']

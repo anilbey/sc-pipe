@@ -1,1 +1,1 @@
-snakemake --dag -s snakefile_sc_rnaseq.py | dot -Tsvg > dag_real.svg
+snakemake --dag -s tumor_profiler.snakefile | dot -Tsvg > dag_real.svg

@@ -1,0 +1,33 @@
+{
+  "real_data_output": "analysis_output",
+  "simulated_data_output": "simulated/15_groups_21.03.2018",
+  "input_fastqs": "/cluster/work/bewi/members/tuncel/data/fastqs",
+  "cell_ranger_output": "/cluster/work/bewi/members/tuncel/data/cellranger_run",
+  "cell_ranger_filtered_matrix_path": "/Users/mtuncel/sc-pipe/data/pbmc3k",
+  "reference_transcriptome": "/cluster/work/bewi/ngs/databases/cellranger/refdata-cellranger-hg19-1.2.0",
+  "_transcriptome_code": "GRCh38",
+  "transcriptome_code": "hg19",
+  "unique_run_id": "20150306_22_27",
+  "cellranger_count": {
+    "local_cores": 16
+  },
+  "preprocess": {
+    "zheng17": {
+      "n_top_genes": 1000
+    }
+  },
+  "clustering": {
+    "phenograph": {
+      "benchmark_n_neighbours": [
+        5,
+        25,
+        50,
+        100,
+        125,
+        250
+      ],
+      "n_neighbours": 100,
+      "n_jobs": 8
+    }
+  }
+}

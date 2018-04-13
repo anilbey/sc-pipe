@@ -1,1 +1,1 @@
- snakemake --dag -s snakefile_benchmark_clust.py | dot -Tsvg > dag.svg
+ snakemake --dag -s benchmarking_pipeline.snakefile | dot -Tsvg > dag.svg
