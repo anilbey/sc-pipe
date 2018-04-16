@@ -26,10 +26,23 @@ select_protein_coding_genes = function(path, output_file)
   gene_ids = h5f$gene_attrs$gene_ids
 
   # map ensembl to entrez gene ids, only take into account protein coding genes
-  mart = useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
+  mart_obj = NULL
+
+  tryCatch({
+  mart_obj <<- useMart("ensembl", host="www.ensembl.org", dataset = "hsapiens_gene_ensembl")
+  }, error = function(e)
+  {
+    print(e)
+    mart_obj <<- useMart("ensembl", host="asia.ensembl.org", dataset = "hsapiens_gene_ensembl")
+  })
+
+  print(mart_obj)
+
+
+  #mart = useDataset("hsapiens_gene_ensembl", useMart("ensembl"))
 
   entrezGeneMapping_proteinCoding = getBM(attributes= c("ensembl_gene_id", "entrezgene", "hgnc_symbol", "description"),
-      filters = c("ensembl_gene_id","biotype"), values= list(gene_ids,'protein_coding'), mart= mart, uniqueRows=T)
+      filters = c("ensembl_gene_id","biotype"), values= list(gene_ids,'protein_coding'), mart= mart_obj, uniqueRows=T)
 
   # filter NAs and multiple entries
   entrezGeneMapping_proteinCoding_noNa = na.omit(entrezGeneMapping_proteinCoding)
