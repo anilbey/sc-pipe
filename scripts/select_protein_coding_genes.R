@@ -26,14 +26,13 @@ select_protein_coding_genes = function(path, output_file)
   gene_ids = h5f$gene_attrs$gene_ids
 
   # map ensembl to entrez gene ids, only take into account protein coding genes
-  mart_obj = NULL
+  mart_obj <- NULL
 
-  tryCatch({
-  mart_obj <<- useMart("ensembl", host="www.ensembl.org", dataset = "hsapiens_gene_ensembl")
+  mart_obj = tryCatch({
+    useMart("ensembl", host="www.ensembl.org", dataset = "hsapiens_gene_ensembl")
   }, error = function(e)
   {
-    print(e)
-    mart_obj <<- useMart("ensembl", host="asia.ensembl.org", dataset = "hsapiens_gene_ensembl")
+    useMart("ensembl", host="asia.ensembl.org", dataset = "hsapiens_gene_ensembl")
   })
 
   print(mart_obj)
