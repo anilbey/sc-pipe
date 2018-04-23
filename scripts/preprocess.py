@@ -9,14 +9,15 @@ def preprocess(hdf5_file, out_path, n_top_genes):
     adata = sc.AnnData(matrix)
 
     print(adata.X.shape)
-    # sc.pp.normalize_per_cell(adata)          # normalize with total UMI count per cell
+    # do not normalize after cell_cycle effects are regressed out (negative values are introduced)
+    #sc.pp.normalize_per_cell(adata)          # normalize with total UMI count per cell
     print(adata.X.shape)
     filter_result = sc.pp.filter_genes_dispersion(adata.X, flavor='cell_ranger', n_top_genes=n_top_genes, log=False)
     # filter results is a recarray
     # mask2 to select the top 1000 genes
     mask2 = filter_result.gene_subset
     adata = adata[:, mask2]
-    # sc.pp.normalize_per_cell(adata)  # need to redo normalization after filtering
+    #sc.pp.normalize_per_cell(adata)  # need to redo normalization after filtering
 
     # Writing the output hdf5 files
     matrix = adata.X

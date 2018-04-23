@@ -29,15 +29,15 @@ def remove_cell_cycle(input_file, out_file):
     adata.var_names = gene_names
 
     # Log-transformation of data and scaling should always be performed before scoring
-    sc.pp.normalize_per_cell(adata, counts_per_cell_after=1e4)
-    sc.pp.log1p(adata)
-    sc.pp.scale(adata)
+    sc.pp.normalize_per_cell(adata)
+    # sc.pp.log1p(adata)
+    #    sc.pp.scale(adata)
 
     # calculate the cell cycle scores
     sc.tl.score_genes_cell_cycle(adata, s_genes=s_genes, g2m_genes=g2m_genes)
 
     sc.pp.regress_out(adata, ['S_score', 'G2M_score'])
-    sc.pp.scale(adata)
+    #    sc.pp.scale(adata)
 
     matrix = adata.X
     cell_phase = np.array(adata.obs['phase'].values, dtype='S10')
