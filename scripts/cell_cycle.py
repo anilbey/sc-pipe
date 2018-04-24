@@ -29,8 +29,8 @@ def remove_cell_cycle(input_file, out_file):
     adata.var_names = gene_names
 
     # Log-transformation of data and scaling should always be performed before scoring
-    sc.pp.normalize_per_cell(adata)
     # sc.pp.log1p(adata)
+    sc.pp.normalize_per_cell(adata)
     #    sc.pp.scale(adata)
 
     # calculate the cell cycle scores
