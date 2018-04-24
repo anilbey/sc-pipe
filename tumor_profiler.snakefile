@@ -69,10 +69,20 @@ rule filter_out_noncoding:
     shell:
         'Rscript scripts/select_protein_coding_genes.R --input {input} --output {output} 2> {log.err} 1> {log.out} '
 
+rule cell_cycle_removal:
+    input:
+        hdf5_file = HDF5_OUTPUT+'/coding_region_only_{sample}.h5'
+    output:
+        HDF5_OUTPUT+'/cell_cycle_removed_{sample}.h5'
+    log:
+        out = LOG_FILES+'/cell_cycle_removal/sample_{sample}.out',
+        err = LOG_FILES+'/cell_cycle_removal/sample_{sample}.err'
+    shell:
+        "python scripts/apply_cell_cycle_removal.py -i {input.hdf5_file} -o {output} 2> {log.err} 1> {log.out}"
 
 rule preprocess:
     input:
-        hdf5_file = HDF5_OUTPUT+'/coding_region_only_{sample}.h5'
+        hdf5_file = HDF5_OUTPUT+'/cell_cycle_removed_{sample}.h5'
     params:
         n_top_genes = config['preprocess']['zheng17']['n_top_genes']
     output:
@@ -83,12 +93,14 @@ rule preprocess:
     shell:
         "python scripts/apply_preprocess.py -i {input.hdf5_file} -o {output} --n_top_genes {params.n_top_genes} 2> {log.err} 1> {log.out}"
 
+
 rule phenograph:
     input:
         #rules.preprocess.output
         HDF5_OUTPUT+'/zheng17_{sample}.h5'
     params:
-        n_neighbours = config['clustering']['phenograph']['n_neighbours']
+        n_neighbours = config['clustering']['phenograph']['n_neighbours'],
+        log_normalize = config['clustering']['phenograph']['log_normalize']
     output:
         ANALYSIS_OUTPUT+'/{sample}/phenograph/'+'clusters.csv'
     log:
@@ -96,4 +108,4 @@ rule phenograph:
         err = LOG_FILES+'/phenograph/sample_{sample}.err'
     threads: config['clustering']['phenograph']['n_jobs']
     shell:
-        "python scripts/apply_phenograph.py {input} {output} {params.n_neighbours} --n_threads {threads} 2> {log.err} 1> {log.out}"
+        "python scripts/apply_phenograph.py {input} {output} {params.n_neighbours} -l {params.log_normalize} --n_threads {threads} 2> {log.err} 1> {log.out}"
