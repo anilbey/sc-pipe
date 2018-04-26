@@ -16,6 +16,14 @@ def remove_cell_cycle(input_file, out_file):
 
     adata = sc.AnnData(X=matrix, var=gene_names)
 
+    # Normalize per cell
+    sc.pp.normalize_per_cell(adata)
+    cnt_mat = adata.X.copy()
+
+    # log (counts + 1)
+    sc.pp.log1p(adata)
+    log_cnt_mat = adata.X.copy()
+
     # Load cell cycle genes defined in [Tirosh et al, 2015](https://doi.org/10.1126/science.aad0501).
     # It is a list of 97 genes, represented by their gene symbol.
 
@@ -28,18 +36,22 @@ def remove_cell_cycle(input_file, out_file):
     # this is needed otherwise scanpy cannot tell the index
     adata.var_names = gene_names
 
-    # Log-transformation of data and scaling should always be performed before scoring
-    # sc.pp.log1p(adata)
-    sc.pp.normalize_per_cell(adata)
-    #    sc.pp.scale(adata)
 
     # calculate the cell cycle scores
     sc.tl.score_genes_cell_cycle(adata, s_genes=s_genes, g2m_genes=g2m_genes)
 
+    # regressing out
     sc.pp.regress_out(adata, ['S_score', 'G2M_score'])
-    #    sc.pp.scale(adata)
 
-    matrix = adata.X
+    corrected_log_cnt_mat = adata.X.copy()
+
+    # Compute the scaling factors
+    scaling_factors = np.exp(corrected_log_cnt_mat - log_cnt_mat)
+
+    # multiply original counts by the scaling factors
+    corrected_cnt_mat = scaling_factors * cnt_mat
+
+    matrix = corrected_cnt_mat
     cell_phase = np.array(adata.obs['phase'].values, dtype='S10')
 
     # write the output
